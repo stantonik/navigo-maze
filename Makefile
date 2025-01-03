@@ -20,11 +20,13 @@ SRCS := $(sort $(shell find $(SRC_DIR) -name '*.c'))
 
 # Library directory
 LIBS_DIR = libs
+SRCS += $(shell find '$(LIBS_DIR)/csimple-ecs/src' -name '*.c')
 
 # Includes
 INCLUDE_DIR = $(LIBS_DIR)/glew/include \
 			  $(LIBS_DIR)/glfw/include \
 			  $(LIBS_DIR)/cglm/include \
+			  $(LIBS_DIR)/csimple-ecs/include \
 			  $(LIBS_DIR)/stb
 INCLUDES = $(addprefix -I,$(SRC_DIR) $(INCLUDE_DIR))
 
@@ -134,7 +136,7 @@ run: $(BIN_DIR)/$(EXEC)
 
 .PHONY: clean
 clean:
-	$(RM) -rf $(BUILD_DIR_ROOT)
+	$(RM) -rf $(BUILD_DIR)
 
 .PHONY: compdb
 compdb: $(BUILD_DIR_ROOT)/compile_commands.json

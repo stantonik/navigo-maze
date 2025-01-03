@@ -16,6 +16,7 @@ extern "C" {
 //------------------------------------------------------------------------------
 #include "GL/glew.h"
 #include "cglm/types.h"
+#include "stdbool.h"
 
 //------------------------------------------------------------------------------
 // Typedefs and Enums
@@ -30,11 +31,13 @@ typedef struct
 typedef struct
 {
     vec3 velocity;
+    float mass;
+    bool gravity;
 } rigidbody_t;
 
 typedef struct
 {
-    GLint VAO, VBO, EBO;
+    GLuint VAO, VBO, EBO;
 } mesh_t;
 
 typedef struct
