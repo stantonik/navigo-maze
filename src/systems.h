@@ -36,6 +36,7 @@ extern "C" {
 //------------------------------------------------------------------------------
 extern ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args);
+extern ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args);
 
 extern ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_texture_update(ecs_entity_t *it, int count, void *args);
@@ -45,6 +46,7 @@ extern ecs_err_t system_mesh_texture_update(ecs_entity_t *it, int count, void *a
 extern ecs_err_t system_controller_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_controller_update(ecs_entity_t *it, int count, void *args);
 
+extern ecs_err_t system_mouvement_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args);
 
 //------------------------------------------------------------------------------

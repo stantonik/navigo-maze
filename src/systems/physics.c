@@ -36,6 +36,22 @@
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
+ecs_err_t system_mouvement_init(ecs_entity_t *it, int count, void *args)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        transform_t *transform;
+        ecs_get_component(it[i], transform_t, &transform);
+
+        if (glm_vec3_eqv(transform->scale, (vec3){ 0 }))
+        {
+            glm_vec3_one(transform->scale);
+        }
+    }
+
+    return ECS_OK;
+}
+
 ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args)
 {
     float dt = ((float *)args)[0];

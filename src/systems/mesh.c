@@ -57,6 +57,7 @@ static const unsigned int indices[] =
 ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
 {
     glUseProgram(gfx_get_shader_program());
+    glEnable(GL_DEPTH_TEST);
 
     for (int i = 0; i < count; ++i)
     {
@@ -100,6 +101,21 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
+ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        mesh_t *mesh;
+        ecs_get_component(it[i], mesh_t, &mesh);
+
+        glBindVertexArray(mesh->VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
+
+    return ECS_OK;
+}
+
 ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
 {
     for (int i = 0; i < count; ++i)
@@ -118,10 +134,6 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
         glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mesh->vertices), mesh->vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // Put this appart
-        glBindVertexArray(mesh->VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 
     return ECS_OK;
