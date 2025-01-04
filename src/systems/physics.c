@@ -163,7 +163,7 @@ inline bool check_collision(transform_t *t1, collider_t *c1, transform_t *t2, co
         t1->position[2] + c1->offset[2] + c1->size[2] / 2.0f
     };
 
-    // Calculate the AABB min and max for the second clider
+    // Calculate the AABB min and max for the second collider
     float min2[3] = {
         t2->position[0] + c2->offset[0] - c2->size[0] / 2.0f,
         t2->position[1] + c2->offset[1] - c2->size[1] / 2.0f,
@@ -177,11 +177,40 @@ inline bool check_collision(transform_t *t1, collider_t *c1, transform_t *t2, co
     };
 
     // Check for overlap on each axis
-    bool overlapX = (max1[0] >= min2[0]) && (min1[0] <= max2[0]);
-    bool overlapY = (max1[1] >= min2[1]) && (min1[1] <= max2[1]);
-    bool overlapZ = (max1[2] >= min2[2]) && (min1[2] <= max2[2]);
+    float overlapX = fmin(max1[0], max2[0]) - fmax(min1[0], min2[0]);
+    float overlapY = fmin(max1[1], max2[1]) - fmax(min1[1], min2[1]);
+    float overlapZ = fmin(max1[2], max2[2]) - fmax(min1[2], min2[2]);
 
-    return overlapX && overlapY && overlapZ;
+    if (overlapX > 0 && overlapY > 0 && overlapZ > 0)
+    {
+        // Find the axis of minimum penetration depth
+        if (overlapX < overlapY && overlapX < overlapZ)
+        {
+            c1->impact_normal[0] = (t1->position[0] < t2->position[0]) ? -1.0f : 1.0f;
+            c1->impact_normal[1] = 0.0f;
+            c1->impact_normal[2] = 0.0f;
+        }
+        else if (overlapY < overlapX && overlapY < overlapZ)
+        {
+            c1->impact_normal[0] = 0.0f;
+            c1->impact_normal[1] = (t1->position[1] < t2->position[1]) ? -1.0f : 1.0f;
+            c1->impact_normal[2] = 0.0f;
+        }
+        else
+        {
+            c1->impact_normal[0] = 0.0f;
+            c1->impact_normal[1] = 0.0f;
+            c1->impact_normal[2] = (t1->position[2] < t2->position[2]) ? -1.0f : 1.0f;
+        }
+
+        return true;
+    }
+
+    c1->impact_normal[0] = 0.0f;
+    c1->impact_normal[1] = 0.0f;
+    c1->impact_normal[2] = 0.0f;
+
+    return false;
 }
 
 inline bool check_all_collision(transform_t *t1, collider_t *c1, int ind, ecs_entity_t *it, int count)
@@ -223,17 +252,17 @@ ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args)
 
         if (check_all_collision(transform, collider, i, it, count))
         {
-            vec3 dir;
-            glm_vec3_sub(collider->impact_position, transform->position, dir);
-            glm_vec3_normalize(dir);
+            float vn_length = glm_vec3_dot(rb->velocity, collider->impact_normal);
+            vec3 vn;
+            glm_vec3_scale(collider->impact_normal, -vn_length, vn);
+            glm_vec3_add(rb->velocity, vn, rb->velocity);
 
-            /* vec3 new_velocity; */
-            /* glm_vec3_scale(dir, glm_vec3_dot(rb->velocity, dir), new_velocity); */
-            /* glm_vec3_sub(rb->velocity, new_velocity, new_velocity); */
-            /* glm_vec3_copy(new_velocity, rb->velocity); */
-
-            glm_vec3_copy(collider->impact_position, transform->position);
-            /* printf("touching\n"); */
+            vec3 last_pos;
+            vec3 offset;
+            glm_vec3_scale(collider->impact_normal, 0.005f, offset);
+            glm_vec3_add(offset, collider->impact_position, last_pos);
+            
+            glm_vec3_copy(last_pos, transform->position);
         }
         else
         {
