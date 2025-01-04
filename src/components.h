@@ -49,7 +49,7 @@ typedef struct
 
 typedef struct
 {
-    const char *name;
+    char name[32];
     int width, height;
     vec2 uv_min, uv_max;
 } texture_t;

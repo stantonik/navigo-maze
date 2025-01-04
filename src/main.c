@@ -11,12 +11,14 @@
 #include "GLFW/glfw3.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "components.h"
 #include "ecs/ecs.h"
 #include "ecs/ecs_err.h"
 #include "gfx.h"
+#include "maps.h"
 #include "systems.h"
 
 //------------------------------------------------------------------------------
@@ -75,6 +77,7 @@ int main(void)
 
     ecs_create_signature(&signature, mesh_t, texture_t);
     ecs_register_system(system_mesh_texture_update, ECS_SYSTEM_ON_INIT, signature);
+
     ecs_create_signature(&signature, transform_t, mesh_t);
     ecs_register_system(system_mesh_init, ECS_SYSTEM_ON_INIT, signature);
 
@@ -94,17 +97,23 @@ int main(void)
     ecs_add_component(player, texture_t, &((texture_t){ .name="dungeon/tile_0099" }));
 
     // Map
-    ecs_entity_t tiles[20 * 20];
-    for (int y = 0; y < 20; ++y)
+    const map_t *map = get_map(MAP_FOREST);
+    ecs_entity_t tiles[map->size * map->size];
+    for (int y = 0; y < map->size; ++y)
     {
-        for (int x = 0; x < 20; ++x)
+        for (int x = 0; x < map->size; ++x)
         {
-            ecs_create_entity(&tiles[x + y * 20]);
-            ecs_entity_t tile = tiles[x + y * 20];
+            ecs_create_entity(&tiles[x + y * map->size]);
+            ecs_entity_t tile = tiles[x + y * map->size];
 
-            ecs_add_component(tile, transform_t, &((transform_t){ .position={ x - 20.f / 2, y - 20.f / 2, 0.5 } }));
+            texture_t tex = { .name="city/tile_" };
+            char cid[5] = "";
+            sprintf(cid, "%04d", map->map[x + y * map->size]);
+            strcat(tex.name, cid);
+
+            ecs_add_component(tile, transform_t, &((transform_t){ .position={ x - map->size / 2.f, y - map->size / 2.f, 0.5 } }));
             ecs_add_component(tile, mesh_t, NULL);
-            ecs_add_component(tile, texture_t, &((texture_t){ .name="city/tile_0001" }));
+            ecs_add_component(tile, texture_t, &tex);
         }
     }
 
