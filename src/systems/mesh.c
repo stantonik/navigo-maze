@@ -66,10 +66,17 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
         ecs_get_component(it[i], mesh_t, &mesh);
         ecs_get_component(it[i], transform_t, &transform);
 
+        vec3 position;
+        vec3 scale;
+        vec3 offset;
+        glm_vec3_scale(transform->scale, 1.01f, scale); // avoid gap texture glitchs
+        glm_vec3_scale(transform->scale, 0.5f, offset);
+        glm_vec3_sub(transform->position, offset, position);
+
         for (int i = 0; i < 4; i++) 
         {
-            glm_vec3_mul((float *)vertex_pos_unit[i], transform->scale, mesh->vertices[i].position);
-            glm_vec3_add(mesh->vertices[i].position, transform->position, mesh->vertices[i].position);
+            glm_vec3_mul((float *)vertex_pos_unit[i], scale, mesh->vertices[i].position);
+            glm_vec3_add(mesh->vertices[i].position, position, mesh->vertices[i].position);
         }
 
         glGenVertexArrays(1, &mesh->VAO);
@@ -125,10 +132,17 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
         ecs_get_component(it[i], mesh_t, &mesh);
         ecs_get_component(it[i], transform_t, &transform);
 
+        vec3 position;
+        vec3 scale;
+        vec3 offset;
+        glm_vec3_scale(transform->scale, 1.01f, scale); // avoid gap texture glitchs
+        glm_vec3_scale(transform->scale, 0.5f, offset);
+        glm_vec3_sub(transform->position, offset, position);
+
         for (int i = 0; i < 4; i++) 
         {
-            glm_vec3_mul((float *)vertex_pos_unit[i], transform->scale, mesh->vertices[i].position);
-            glm_vec3_add(mesh->vertices[i].position, transform->position, mesh->vertices[i].position);
+            glm_vec3_mul((float *)vertex_pos_unit[i], scale, mesh->vertices[i].position);
+            glm_vec3_add(mesh->vertices[i].position, position, mesh->vertices[i].position);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
