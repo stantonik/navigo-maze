@@ -55,9 +55,12 @@ int main(void)
     // Components registration
     ecs_register_component(transform_t);
     ecs_register_component(rigidbody_t);
+    ecs_register_component(collider_t);
     ecs_register_component(mesh_t);
     ecs_register_component(texture_t);
     ecs_register_component(controller_t);
+    // weird because it works without registering some of the used components
+    ecs_register_component(camera_t);
 
     // Systems registration
     ecs_signature_t signature;
@@ -69,8 +72,11 @@ int main(void)
     ecs_register_system(system_mouvement_init, ECS_SYSTEM_ON_INIT, signature);
     ecs_create_signature(&signature, transform_t, rigidbody_t);
     ecs_register_system(system_mouvement_update, ECS_SYSTEM_ON_UPDATE, signature);
-
     ecs_set_system_parameters(system_mouvement_update, &dt);
+
+    ecs_create_signature(&signature, transform_t, rigidbody_t, collider_t);
+    ecs_register_system(system_collider_init, ECS_SYSTEM_ON_INIT, signature);
+    ecs_register_system(system_collider_update, ECS_SYSTEM_ON_UPDATE, signature);
 
     ecs_create_signature(&signature, texture_t);
     ecs_register_system(system_texture_init, ECS_SYSTEM_ON_INIT, signature);
@@ -96,6 +102,7 @@ int main(void)
     ecs_create_entity(&player);
     ecs_add_component(player, transform_t, &((transform_t){ .scale={ 1, 1, 1 } }));
     ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, }));
+    ecs_add_component(player, collider_t, &((collider_t){ .is_trigger=true }));
     ecs_add_component(player, mesh_t, NULL);
     ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=2 }));
     ecs_add_component(player, texture_t, &((texture_t){ .name="dungeon/tile_0099" }));
@@ -109,15 +116,22 @@ int main(void)
         {
             ecs_create_entity(&tiles[x + y * map->size]);
             ecs_entity_t tile = tiles[x + y * map->size];
+            int tile_id = map->map[x + y * map->size];
 
             texture_t tex = { .name="city/tile_" };
             char cid[5] = "";
-            sprintf(cid, "%04d", map->map[x + y * map->size]);
+            sprintf(cid, "%04d", tile_id);
             strcat(tex.name, cid);
 
             ecs_add_component(tile, transform_t, &((transform_t){ .position={ x - map->size / 2.f, y - map->size / 2.f, 0.5 } }));
+            ecs_add_component(tile, rigidbody_t, NULL);
             ecs_add_component(tile, mesh_t, NULL);
             ecs_add_component(tile, texture_t, &tex);
+
+            if (tile_id == 126)
+            {
+                ecs_add_component(tile, collider_t, NULL);
+            }
         }
     }
 

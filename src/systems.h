@@ -52,6 +52,9 @@ extern ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_mouvement_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args);
 
+extern ecs_err_t system_collider_init(ecs_entity_t *it, int count, void *args);
+extern ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args);
+
 //------------------------------------------------------------------------------
 // Inline Functions
 //------------------------------------------------------------------------------

@@ -35,6 +35,21 @@ typedef struct
     bool gravity;
 } rigidbody_t;
 
+typedef enum
+{
+    COLLIDER_SQUARE = 1,
+} collider_shape_t;
+
+typedef struct
+{
+    collider_shape_t shape;
+    bool is_trigger;
+    vec3 offset;
+    vec3 size;
+    vec3 impact_position;
+    vec3 impact_normal;
+} collider_t;
+
 typedef struct
 {
     vec3 position;
