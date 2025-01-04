@@ -88,9 +88,9 @@ int main(void)
     ecs_entity_t player;
     ecs_create_entity(&player);
     ecs_add_component(player, transform_t, &((transform_t){ .scale={ 1, 1, 1 } }));
-    ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=50, }));
+    ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, }));
     ecs_add_component(player, mesh_t, NULL);
-    ecs_add_component(player, controller_t, NULL);
+    ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=2 }));
     ecs_add_component(player, texture_t, &((texture_t){ .name="dungeon/tile_0099" }));
 
     // Map

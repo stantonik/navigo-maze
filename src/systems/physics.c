@@ -69,14 +69,22 @@ ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args)
         }
 
         float normal_force = rb->mass * 9.81f;
-        float friction_force = 0.01f * normal_force;
-        float friction_direction = (rb->velocity[0] > 0) ? -1.0f : 1.0f;
+        float friction_force = 0.05f * normal_force;
+
+        float friction_direction_x = (rb->velocity[0] > 0) ? -1.0f : 1.0f;
+        float friction_direction_y = (rb->velocity[1] > 0) ? -1.0f : 1.0f;
+
         if (fabs(rb->velocity[0]) > 0) 
         {
-            rb->velocity[0] += friction_direction * friction_force * dt;
+            rb->velocity[0] += friction_direction_x * friction_force * dt;
         } 
 
-        if (friction_direction < 0)
+        if (fabs(rb->velocity[1]) > 0)
+        {
+            rb->velocity[1] += friction_direction_y * friction_force * dt;
+        }
+
+        if (friction_direction_x < 0)
         {
             if (rb->velocity[0] < 0)
             {
@@ -88,6 +96,21 @@ ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args)
             if (rb->velocity[0] > 0)
             {
                 rb->velocity[0] = 0;
+            }
+        }
+
+        if (friction_direction_y < 0)
+        {
+            if (rb->velocity[1] < 0)
+            {
+                rb->velocity[1] = 0;
+            }
+        }
+        else
+        {
+            if (rb->velocity[1] > 0)
+            {
+                rb->velocity[1] = 0;
             }
         }
 

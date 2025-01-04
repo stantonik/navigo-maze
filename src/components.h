@@ -56,7 +56,9 @@ typedef struct
 
 typedef struct 
 { 
-
+    float walk_speed;
+    float run_speed;
+    float jump_height;
 } controller_t;
 
 #ifdef __cplusplus
