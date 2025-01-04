@@ -46,6 +46,9 @@ extern ecs_err_t system_mesh_texture_update(ecs_entity_t *it, int count, void *a
 extern ecs_err_t system_controller_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_controller_update(ecs_entity_t *it, int count, void *args);
 
+extern ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args);
+extern ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args);
+
 extern ecs_err_t system_mouvement_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args);
 

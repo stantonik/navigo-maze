@@ -61,6 +61,11 @@ typedef struct
     float jump_height;
 } controller_t;
 
+typedef struct
+{
+    
+} camera_t;
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

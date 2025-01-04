@@ -87,6 +87,10 @@ int main(void)
     ecs_create_signature(&signature, mesh_t);
     ecs_register_system(system_mesh_draw, ECS_SYSTEM_ON_UPDATE, signature);
 
+    ecs_create_signature(&signature, transform_t, camera_t);
+    ecs_register_system(system_camera_init, ECS_SYSTEM_ON_INIT, signature);
+    ecs_register_system(system_camera_update, ECS_SYSTEM_ON_UPDATE, signature);
+
     // Entities creation
     ecs_entity_t player;
     ecs_create_entity(&player);
