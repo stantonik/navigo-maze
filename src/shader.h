@@ -1,11 +1,11 @@
 /**
  * @author      : stanleyarn (stanleyarn@$HOSTNAME)
- * @file        : gfx
- * @created     : Vendredi jan 03, 2025 19:41:44 CET
+ * @file        : shader
+ * @created     : Samedi jan 04, 2025 23:30:09 CET
  */
 
-#ifndef GFX_H
-#define GFX_H
+#ifndef SHADER_H
+#define SHADER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,29 +15,28 @@ extern "C" {
 // Includes
 //------------------------------------------------------------------------------
 #include "GL/glew.h"
-#include "GLFW/glfw3.h"
 
 //------------------------------------------------------------------------------
-// Macros
+// Typedefs and Enums
 //------------------------------------------------------------------------------
-#define SCR_WIDTH 800
-#define SCR_HEIGHT 600
-#define SRC_TITLE "NavigoMaze"
+typedef enum
+{
+    SHADER_WORLD,
+    SHADER_TEXT,
+    SHADER_UI
+} shader_type_t;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
-extern void gfx_init_opengl();
-extern GLFWwindow *gfx_get_window();
-
-//------------------------------------------------------------------------------
-// Inline Functions
-//------------------------------------------------------------------------------
+extern void shader_init();
+extern void shader_use(shader_type_t type);
+extern GLuint shader_get_program(shader_type_t type);
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 
-#endif /* GFX_H */
+#endif /* SHADER_H */
 

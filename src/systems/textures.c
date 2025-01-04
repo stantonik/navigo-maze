@@ -11,7 +11,7 @@
 #include "components.h"
 #include "ecs/ecs.h"
 #include "ecs/ecs_err.h"
-#include "gfx.h"
+#include "shader.h"
 #include "stb_image.h"
 #include "stb_rect_pack.h"
 #include "systems.h"
@@ -113,7 +113,7 @@ ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlas_width, atlas_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlas_data);
     /* glGenerateMipmap(GL_TEXTURE_2D); */
 
-    GLuint shader_program = gfx_get_shader_program();
+    GLuint shader_program = shader_get_program(SHADER_WORLD);
     glUseProgram(shader_program);
     glUniform1i(glGetUniformLocation(shader_program, "texture1"), 0);
 

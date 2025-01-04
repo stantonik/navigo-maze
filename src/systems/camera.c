@@ -14,6 +14,7 @@
 #include "ecs/ecs.h"
 #include "ecs/ecs_err.h"
 #include "gfx.h"
+#include "shader.h"
 #include "systems.h"
 
 //------------------------------------------------------------------------------
@@ -48,7 +49,7 @@ ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
     ecs_get_component(it[0], camera_t, &camera);
     ecs_get_component(it[0], transform_t, &transform);
 
-    GLuint shader_program = gfx_get_shader_program();
+    GLuint shader_program = shader_get_program(SHADER_WORLD);
 
     // Load uniform
     glUseProgram(shader_program);
@@ -67,7 +68,7 @@ ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args)
 {
-    GLuint shader_program = gfx_get_shader_program();
+    GLuint shader_program = shader_get_program(SHADER_WORLD);
     mat4 view;
     create_view_matrix(10, view);
     GLint view_loc = glGetUniformLocation(shader_program, "view");

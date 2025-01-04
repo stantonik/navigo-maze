@@ -12,6 +12,7 @@
 #include "components.h"
 #include "ecs/ecs_err.h"
 #include "gfx.h"
+#include "shader.h"
 #include "systems.h"
 
 #include <stdlib.h>
@@ -56,7 +57,7 @@ static const unsigned int indices[] =
 //------------------------------------------------------------------------------
 ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
 {
-    glUseProgram(gfx_get_shader_program());
+    shader_use(SHADER_WORLD);
     glEnable(GL_DEPTH_TEST);
 
     for (int i = 0; i < count; ++i)
@@ -110,6 +111,8 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
 {
+    shader_use(SHADER_WORLD);
+
     for (int i = 0; i < count; ++i)
     {
         mesh_t *mesh;
@@ -125,6 +128,8 @@ ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
 {
+    shader_use(SHADER_WORLD);
+
     for (int i = 0; i < count; ++i)
     {
         mesh_t *mesh;
@@ -155,7 +160,7 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_mesh_texture_update(ecs_entity_t *it, int count, void *args)
 {
-    glUseProgram(gfx_get_shader_program());
+    shader_use(SHADER_WORLD);
 
     for (int i = 0; i < count; ++i)
     {

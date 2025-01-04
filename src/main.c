@@ -19,6 +19,7 @@
 #include "ecs/ecs_err.h"
 #include "gfx.h"
 #include "maps.h"
+#include "shader.h"
 #include "systems.h"
 
 //------------------------------------------------------------------------------
@@ -45,6 +46,7 @@ static double get_time();
 int main(void)
 {
     gfx_init_opengl();
+    shader_init();
     ecs_init();
 
     // Scene creation
@@ -114,9 +116,14 @@ int main(void)
     {
         for (int x = 0; x < map->size; ++x)
         {
+            int tile_id = map->map[x + y * map->size];
+            /* if (tile_id == -1) */ 
+            /* { */
+            /*     continue; */
+            /* } */
+
             ecs_create_entity(&tiles[x + y * map->size]);
             ecs_entity_t tile = tiles[x + y * map->size];
-            int tile_id = map->map[x + y * map->size];
 
             texture_t tex = { .name="city/tile_" };
             char cid[5] = "";
