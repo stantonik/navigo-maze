@@ -8,6 +8,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "cglm/vec3.h"
+#include "cglm/vec2.h"
 #include "components.h"
 #include "ecs/ecs_err.h"
 #include "gfx.h"
@@ -23,11 +24,7 @@
 //------------------------------------------------------------------------------
 // Typedefs and Enums
 //------------------------------------------------------------------------------
-typedef struct
-{
-    vec3 position;
-    vec2 uv;
-} vertex_t;
+
 
 //------------------------------------------------------------------------------
 // Global Variables
@@ -36,24 +33,12 @@ typedef struct
 //------------------------------------------------------------------------------
 // Static Variables
 //------------------------------------------------------------------------------
-static const vertex_t vertices[] =
+static const vec3 vertex_pos_unit[4] =
 {
-    {   
-        .position={ 0.5f, 0.5f, 0.0f }, // top-right
-        .uv={ 1, 1 } 
-    },
-    {   
-        .position={ 0.5f, -0.5f, 0.0f }, // bottom-right
-        .uv={ 1, 0 } 
-    },
-    {   
-        .position={ -0.5f,  0.5f, 0.0f }, // top-left
-        .uv={ 0, 1 } 
-    },
-    {   
-        .position={ -0.5f, -0.5f, 0.0f }, // bottom-left
-        .uv={ 0, 0 }
-    },
+    { 1, 1, 0 }, // top-right
+    { 1, 0, 0 }, // bottom-right
+    { 0, 1, 0 }, // top-left
+    { 0, 0, 0 }  // bottom-left
 };
 
 static const unsigned int indices[] = 
@@ -76,7 +61,15 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
     for (int i = 0; i < count; ++i)
     {
         mesh_t *mesh;
+        transform_t *transform;
         ecs_get_component(it[i], mesh_t, &mesh);
+        ecs_get_component(it[i], transform_t, &transform);
+
+        for (int i = 0; i < 4; i++) 
+        {
+            glm_vec3_mul((float *)vertex_pos_unit[i], transform->scale, mesh->vertices[i].position);
+            glm_vec3_add(mesh->vertices[i].position, transform->position, mesh->vertices[i].position);
+        }
 
         glGenVertexArrays(1, &mesh->VAO);
         glGenBuffers(1, &mesh->VBO);
@@ -85,7 +78,7 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
         glBindVertexArray(mesh->VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(mesh->vertices), mesh->vertices, GL_DYNAMIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
@@ -116,23 +109,39 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
         ecs_get_component(it[i], mesh_t, &mesh);
         ecs_get_component(it[i], transform_t, &transform);
 
-        vertex_t *new_vertices = malloc(sizeof(vertices));
-        memcpy(new_vertices, vertices, sizeof(vertices));
-        for (int i = 0; i < 4; ++i) 
+        for (int i = 0; i < 4; i++) 
         {
-            glm_vec3_add((float *)vertices[i].position, transform->position, new_vertices[i].position);
-
+            glm_vec3_mul((float *)vertex_pos_unit[i], transform->scale, mesh->vertices[i].position);
+            glm_vec3_add(mesh->vertices[i].position, transform->position, mesh->vertices[i].position);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), new_vertices);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mesh->vertices), mesh->vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        free(new_vertices);
-
-
+        // Put this appart
         glBindVertexArray(mesh->VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    }
+
+    return ECS_OK;
+}
+
+ecs_err_t system_mesh_texture_update(ecs_entity_t *it, int count, void *args)
+{
+    glUseProgram(gfx_get_shader_program());
+
+    for (int i = 0; i < count; ++i)
+    {
+        mesh_t *mesh;
+        texture_t *tex;
+        ecs_get_component(it[i], mesh_t, &mesh);
+        ecs_get_component(it[i], texture_t, &tex);
+
+        glm_vec2_copy(tex->uv_max, mesh->vertices[0].uv);
+        glm_vec2_copy((vec2){ tex->uv_max[0], tex->uv_min[1] }, mesh->vertices[1].uv);
+        glm_vec2_copy((vec2){ tex->uv_min[0], tex->uv_max[1] }, mesh->vertices[2].uv);
+        glm_vec2_copy(tex->uv_min, mesh->vertices[3].uv);
     }
 
     return ECS_OK;

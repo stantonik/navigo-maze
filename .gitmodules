@@ -7,3 +7,6 @@
 [submodule "libs/stb"]
 	path = libs/stb
 	url = https://github.com/nothings/stb.git
+[submodule "libs/uthash"]
+	path = libs/uthash
+	url = https://github.com/troydhanson/uthash.git

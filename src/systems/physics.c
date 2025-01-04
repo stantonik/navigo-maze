@@ -42,15 +42,10 @@ ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args)
 
     for (int i = 0; i < count; ++i)
     {
-        ecs_err_t ret = ECS_OK;
         transform_t *transform;
         rigidbody_t *rb;
-        ret |= ecs_get_component(it[i], transform_t, &transform);
-        ret |= ecs_get_component(it[i], rigidbody_t, &rb);
-        if (ret != ECS_OK)
-        {
-            continue;
-        }
+        ecs_get_component(it[i], transform_t, &transform);
+        ecs_get_component(it[i], rigidbody_t, &rb);
 
         if (rb->gravity)
         {

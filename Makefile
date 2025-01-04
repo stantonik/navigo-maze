@@ -20,13 +20,13 @@ SRCS := $(sort $(shell find $(SRC_DIR) -name '*.c'))
 
 # Library directory
 LIBS_DIR = libs
-SRCS += $(shell find '$(LIBS_DIR)/csimple-ecs/src' -name '*.c')
 
 # Includes
 INCLUDE_DIR = $(LIBS_DIR)/glew/include \
 			  $(LIBS_DIR)/glfw/include \
 			  $(LIBS_DIR)/cglm/include \
 			  $(LIBS_DIR)/csimple-ecs/include \
+			  $(LIBS_DIR)/uthash/include \
 			  $(LIBS_DIR)/stb
 INCLUDES = $(addprefix -I,$(SRC_DIR) $(INCLUDE_DIR))
 
@@ -70,7 +70,8 @@ else ifeq ($(OS),macos)
 	LDFLAGS +=
 	LDLIBS += -framework OpenGL -framework Cocoa -framework IOKit \
 			  $(LIBS_DIR)/glew/lib/libGLEW.a \
-			  $(LIBS_DIR)/glfw/lib-universal/libglfw3.a
+			  $(LIBS_DIR)/glfw/lib-universal/libglfw3.a \
+			  $(LIBS_DIR)/csimple-ecs/lib/csimple_ecs.a
 else ifeq ($(OS),linux)
 	# Linux-specific settings
 	INCLUDES +=
