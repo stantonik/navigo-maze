@@ -67,6 +67,9 @@ inline void gfx_init_opengl()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // Remove little freezes idk why
+    glfwSwapInterval(GLFW_FALSE);
+
     if (glewInit() != GLEW_OK)
     {
         fprintf(stderr, "Failed to initialize GLEW");

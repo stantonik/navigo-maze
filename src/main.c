@@ -80,7 +80,7 @@ int main(void)
     // Entities creation
     ecs_entity_t player;
     ecs_create_entity(&player);
-    ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.5f, 0.5f, 1 } }));
+    ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.1f, 0.5f, 1 } }));
     ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=50, .gravity=true }));
     ecs_add_component(player, mesh_t, NULL);
     ecs_add_component(player, controller_t, NULL);
@@ -105,7 +105,7 @@ int main(void)
     float fps;
 
     ecs_listen_systems(ECS_SYSTEM_ON_INIT);
-
+    glfwSwapInterval(GLFW_FALSE);
     // Game loop
     double previous_time = get_time();
     while(!glfwWindowShouldClose(window))
