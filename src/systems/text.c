@@ -21,8 +21,8 @@
 //------------------------------------------------------------------------------
 // Macros
 //------------------------------------------------------------------------------
-#define BITMAP_PATH "./res/textures/font/test.png"
-/* #define BITMAP_PATH "./res/textures/font/bitmap.png" */
+/* #define BITMAP_PATH "./res/textures/font/test.png" */
+#define BITMAP_PATH "./res/textures/font/bitmap.png"
 #define BITMAP_WIDTH 128
 #define BITMAP_HEIGHT 64
 #define BITMAP_TILE_WIDTH 7
@@ -34,11 +34,11 @@
 //------------------------------------------------------------------------------
 // Typedefs and Enums
 //------------------------------------------------------------------------------
-typedef struct
-{
-    vec2 position;
-    vec2 uv;
-} vertex2d_t;
+/* typedef struct */
+/* { */
+/*     vec2 position; */
+/*     vec2 uv; */
+/* } vertex2d_t; */
 
 //------------------------------------------------------------------------------
 // Global Variables
@@ -86,7 +86,7 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
     unsigned char *data = stbi_load(BITMAP_PATH, &width, &height, &nrChannels, 0);
     if (data)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         printf("Loaded font bitmap : %s\n", BITMAP_PATH);
     }
     else
@@ -105,16 +105,16 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex2d_t) * 4, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * 4, NULL, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // Position attribute
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex2d_t), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void *)0);
     glEnableVertexAttribArray(0);
     // Texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex2d_t), (void *)offsetof(vertex2d_t, uv));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -159,21 +159,17 @@ inline void render_text(const char *text, float x, float y, float scale, vec3 co
         vec2 uvmin, uvmax;
         get_char_uv(c, uvmin, uvmax);
 
-        float xpos = x + (BITMAP_TILE_WIDTH * i) * scale;
+        float xpos = x + (BITMAP_TILE_WIDTH * i * 0.8f) * scale;
         float ypos = y - BITMAP_TILE_HEIGHT * scale;
 
         float w = BITMAP_TILE_WIDTH * scale;
         float h = BITMAP_TILE_HEIGHT * scale;
 
-        vertex2d_t vertices[4] = { { { xpos + w, ypos + h } }, { { xpos + w, ypos } }, { { xpos, ypos + h } }, { { xpos, ypos } } };
-        /* glm_vec2_copy(uvmax, vertices[0].uv); */
-        /* glm_vec2_copy((vec2){ uvmax[0], uvmin[1] }, vertices[1].uv); */
-        /* glm_vec2_copy((vec2){ uvmin[0], uvmax[1] }, vertices[2].uv); */
-        /* glm_vec2_copy(uvmin, vertices[3].uv); */
-        glm_vec2_copy((vec2){ 1, 1 }, vertices[0].uv);
-        glm_vec2_copy((vec2){ 1, 0 }, vertices[1].uv);
-        glm_vec2_copy((vec2){ 0, 1 }, vertices[2].uv);
-        glm_vec2_copy((vec2){ 0, 0 }, vertices[3].uv);
+        vertex_t vertices[4] = { { { xpos + w, ypos + h } }, { { xpos + w, ypos } }, { { xpos, ypos + h } }, { { xpos, ypos } } };
+        glm_vec2_copy(uvmax, vertices[0].uv);
+        glm_vec2_copy((vec2){ uvmax[0], uvmin[1] }, vertices[1].uv);
+        glm_vec2_copy((vec2){ uvmin[0], uvmax[1] }, vertices[2].uv);
+        glm_vec2_copy(uvmin, vertices[3].uv);
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
@@ -198,8 +194,6 @@ void get_char_uv(char c, vec2 uvmin, vec2 uvmax)
     int x = cind % BITMAP_HOR_COUNT;
     int y = cind / BITMAP_HOR_COUNT;
 
-    printf("pos(%i,%i)", x, y);
-
     float umin = BITMAP_TILE_WIDTH * x / (float)BITMAP_WIDTH;
     float umax = BITMAP_TILE_WIDTH * (x + 1) / (float)BITMAP_WIDTH;
     float vmin = (BITMAP_HEIGHT - BITMAP_TILE_HEIGHT * (y + 1)) / (float)BITMAP_HEIGHT;
@@ -207,9 +201,4 @@ void get_char_uv(char c, vec2 uvmin, vec2 uvmax)
 
     glm_vec2_copy((vec2){ umin, vmin }, uvmin);
     glm_vec2_copy((vec2){ umax, vmax }, uvmax);
-
-    printf("uvmin : ");
-    glm_vec2_print(uvmin, stdout);
-    printf("uvmax : ");
-    glm_vec2_print(uvmax, stdout);
 }

@@ -81,23 +81,23 @@ int main(void)
     ecs_register_system(system_collider_update, ECS_SYSTEM_ON_UPDATE, signature);
 
     ecs_create_signature(&signature, texture_t);
-    ecs_register_system(system_texture_init, ECS_SYSTEM_ON_INIT, signature);
+    /* ecs_register_system(system_texture_init, ECS_SYSTEM_ON_INIT, signature); */
 
     ecs_create_signature(&signature, mesh_t, texture_t);
     ecs_register_system(system_mesh_texture_update, ECS_SYSTEM_ON_INIT, signature);
 
     ecs_create_signature(&signature, transform_t, mesh_t);
-    ecs_register_system(system_mesh_init, ECS_SYSTEM_ON_INIT, signature);
+    /* ecs_register_system(system_mesh_init, ECS_SYSTEM_ON_INIT, signature); */
 
     ecs_create_signature(&signature, transform_t, rigidbody_t, mesh_t);
-    ecs_register_system(system_mesh_update, ECS_SYSTEM_ON_UPDATE, signature);
+    /* ecs_register_system(system_mesh_update, ECS_SYSTEM_ON_UPDATE, signature); */
 
     ecs_create_signature(&signature, mesh_t);
-    ecs_register_system(system_mesh_draw, ECS_SYSTEM_ON_UPDATE, signature);
+    /* ecs_register_system(system_mesh_draw, ECS_SYSTEM_ON_UPDATE, signature); */
 
     ecs_create_signature(&signature, transform_t, camera_t);
-    ecs_register_system(system_camera_init, ECS_SYSTEM_ON_INIT, signature);
-    ecs_register_system(system_camera_update, ECS_SYSTEM_ON_UPDATE, signature);
+    /* ecs_register_system(system_camera_init, ECS_SYSTEM_ON_INIT, signature); */
+    /* ecs_register_system(system_camera_update, ECS_SYSTEM_ON_UPDATE, signature); */
 
     ecs_create_signature(&signature, transform_t, text_t);
     ecs_register_system(system_text_init, ECS_SYSTEM_ON_INIT, signature);
@@ -116,7 +116,7 @@ int main(void)
     ecs_entity_t text;
     ecs_create_entity(&text);
     ecs_add_component(text, transform_t, &((transform_t){ .position={ } }));
-    ecs_add_component(text, text_t, &((text_t){ .text="H", .color={ 1, 1, 1 }, .size=0.1 }));
+    ecs_add_component(text, text_t, &((text_t){ .text="Hello world!", .color={ 1, 1, 0 }, .size=0.01 }));
 
     // Map
     const map_t *map = get_map(MAP_FOREST);
