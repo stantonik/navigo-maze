@@ -14,6 +14,7 @@
 #include "gfx.h"
 #include "shader.h"
 #include "systems.h"
+#include "textures.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -107,9 +108,9 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
 {
-    glActiveTexture(GL_TEXTURE0);
-    /* glBindTexture(GL_TEXTURE_2D, renderer->textures[0]); */
     shader_use(SHADER_WORLD);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_get_id());
 
     for (int i = 0; i < count; ++i)
     {

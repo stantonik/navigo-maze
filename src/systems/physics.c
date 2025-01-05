@@ -245,7 +245,7 @@ ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args)
 
             vec3 last_pos;
             vec3 offset;
-            glm_vec3_scale(collider->impact_normal, 0.004f, offset);
+            glm_vec3_scale(collider->impact_normal, 0.008f, offset);
             glm_vec3_add(offset, collider->impact_position, last_pos);
             
             glm_vec3_copy(last_pos, transform->position);

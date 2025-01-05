@@ -49,29 +49,32 @@ ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
     ecs_get_component(it[0], camera_t, &camera);
     ecs_get_component(it[0], transform_t, &transform);
 
-    GLuint shader_program = shader_get_program(SHADER_WORLD);
-
     // Load uniform
-    glUseProgram(shader_program);
     mat4 projection;
     create_projection_matrix(SCR_WIDTH, SCR_HEIGHT, projection);
-    GLint projection_loc = glGetUniformLocation(shader_program, "projection");
+
+    shader_use(SHADER_WORLD);
+    GLint projection_loc = glGetUniformLocation(shader_get_program(SHADER_WORLD), "projection");
     glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
 
-    mat4 view;
-    create_view_matrix(10, view);
-    GLint view_loc = glGetUniformLocation(shader_program, "view");
-    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
+    shader_use(SHADER_TEXT);
+    projection_loc = glGetUniformLocation(shader_get_program(SHADER_TEXT), "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
 
     return ECS_OK;
 }
 
 ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args)
 {
-    GLuint shader_program = shader_get_program(SHADER_WORLD);
     mat4 view;
     create_view_matrix(10, view);
-    GLint view_loc = glGetUniformLocation(shader_program, "view");
+
+    shader_use(SHADER_WORLD);
+    GLint view_loc = glGetUniformLocation(shader_get_program(SHADER_WORLD), "view");
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
+
+    shader_use(SHADER_TEXT);
+    view_loc = glGetUniformLocation(shader_get_program(SHADER_TEXT), "view");
     glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
 
     return ECS_OK;

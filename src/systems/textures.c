@@ -15,6 +15,7 @@
 #include "stb_image.h"
 #include "stb_rect_pack.h"
 #include "systems.h"
+#include "textures.h"
 #include "utils/stoi_map.h"
 #include "utils/vector.h"
 
@@ -45,6 +46,7 @@ typedef struct
 //------------------------------------------------------------------------------
 static stoi_map_t name_to_texture_map = {  };
 static vector_t textures = {  };
+GLuint texture_id;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
@@ -101,9 +103,8 @@ ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args)
     unsigned char *atlas_data = calloc(1, atlas_width * atlas_height * 4);
     fill_atlas(atlas_data, atlas_width);
 
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -111,7 +112,6 @@ ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, atlas_width, atlas_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, atlas_data);
-    /* glGenerateMipmap(GL_TEXTURE_2D); */
 
     GLuint shader_program = shader_get_program(SHADER_WORLD);
     glUseProgram(shader_program);
@@ -276,3 +276,7 @@ void inline set_uv_coordinates(int atlas_width, int atlas_height)
     }
 }
 
+inline GLuint texture_get_id()
+{
+    return texture_id;
+}

@@ -32,19 +32,6 @@
 #define BITMAP_ASCII_END 126
 
 //------------------------------------------------------------------------------
-// Typedefs and Enums
-//------------------------------------------------------------------------------
-/* typedef struct */
-/* { */
-/*     vec2 position; */
-/*     vec2 uv; */
-/* } vertex2d_t; */
-
-//------------------------------------------------------------------------------
-// Global Variables
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
 // Static Variables
 //------------------------------------------------------------------------------
 GLuint bitmap_tex;
@@ -60,7 +47,7 @@ static const unsigned int indices[] =
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
-static void render_text(const char *text, float x, float y, float scale, vec3 color);
+static void render_text(const char *text, float x, float y, float z, float scale, vec3 color);
 static void get_char_uv(char c, vec2 uvmin, vec2 uvmax);
 
 //------------------------------------------------------------------------------
@@ -76,8 +63,6 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
     glGenTextures(1, &bitmap_tex);
     glBindTexture(GL_TEXTURE_2D, bitmap_tex); 
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -96,8 +81,7 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
     stbi_image_free(data);
 
     shader_use(SHADER_TEXT);
-    GLuint program = shader_get_program(SHADER_TEXT);
-    glUniform1i(glGetUniformLocation(program, "font_bitmap"), 1);
+    glUniform1i(glGetUniformLocation(shader_get_program(SHADER_TEXT), "font_bitmap"), 1);
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -125,6 +109,11 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args)
 {
+    shader_use(SHADER_TEXT);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, bitmap_tex);
+    glBindVertexArray(VAO);
+
     for (int i = 0; i < count; ++i)
     {
         transform_t *transform;
@@ -132,20 +121,19 @@ ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args)
         ecs_get_component(it[i], text_t, &text);
         ecs_get_component(it[i], transform_t, &transform);
 
-        render_text(text->text, transform->position[0], transform->position[1], text->size, text->color);
+        render_text(text->text, transform->position[0], transform->position[1], transform->position[2], text->size, text->color);
     }
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     return ECS_OK;
 }
 
-inline void render_text(const char *text, float x, float y, float scale, vec3 color)
+inline void render_text(const char *text, float x, float y, float z, float scale, vec3 color)
 {
     shader_use(SHADER_TEXT);
-
     glUniform3fv(glGetUniformLocation(shader_get_program(SHADER_TEXT), "textColor"), 1, (float *)color);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, bitmap_tex);
-    glBindVertexArray(VAO);
 
     int i = 0;
     while (text[i] != '\0') 
@@ -165,7 +153,7 @@ inline void render_text(const char *text, float x, float y, float scale, vec3 co
         float w = BITMAP_TILE_WIDTH * scale;
         float h = BITMAP_TILE_HEIGHT * scale;
 
-        vertex_t vertices[4] = { { { xpos + w, ypos + h } }, { { xpos + w, ypos } }, { { xpos, ypos + h } }, { { xpos, ypos } } };
+        vertex_t vertices[4] = { { { xpos + w, ypos + h, z } }, { { xpos + w, ypos, z } }, { { xpos, ypos + h, z } }, { { xpos, ypos, z } } };
         glm_vec2_copy(uvmax, vertices[0].uv);
         glm_vec2_copy((vec2){ uvmax[0], uvmin[1] }, vertices[1].uv);
         glm_vec2_copy((vec2){ uvmin[0], uvmax[1] }, vertices[2].uv);
@@ -179,8 +167,6 @@ inline void render_text(const char *text, float x, float y, float scale, vec3 co
 
         ++i;
     }
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void get_char_uv(char c, vec2 uvmin, vec2 uvmax)
