@@ -101,16 +101,14 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
 
         glBindBuffer(GL_ARRAY_BUFFER, 0); 
         glBindVertexArray(0);
-
-        /* glActiveTexture(GL_TEXTURE0); */
-        /* glBindTexture(GL_TEXTURE_2D, renderer->textures[0]); */
-
     }
     return ECS_OK;
 }
 
 ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
 {
+    glActiveTexture(GL_TEXTURE0);
+    /* glBindTexture(GL_TEXTURE_2D, renderer->textures[0]); */
     shader_use(SHADER_WORLD);
 
     for (int i = 0; i < count; ++i)

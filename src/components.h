@@ -69,6 +69,13 @@ typedef struct
     vec2 uv_min, uv_max;
 } texture_t;
 
+typedef struct
+{
+    char text[64];
+    vec3 color;
+    float size;
+} text_t;
+
 typedef struct 
 { 
     float walk_speed;

@@ -61,8 +61,8 @@ int main(void)
     ecs_register_component(mesh_t);
     ecs_register_component(texture_t);
     ecs_register_component(controller_t);
-    // weird because it works without registering some of the used components
     ecs_register_component(camera_t);
+    ecs_register_component(text_t);
 
     // Systems registration
     ecs_signature_t signature;
@@ -99,6 +99,10 @@ int main(void)
     ecs_register_system(system_camera_init, ECS_SYSTEM_ON_INIT, signature);
     ecs_register_system(system_camera_update, ECS_SYSTEM_ON_UPDATE, signature);
 
+    ecs_create_signature(&signature, transform_t, text_t);
+    ecs_register_system(system_text_init, ECS_SYSTEM_ON_INIT, signature);
+    ecs_register_system(system_text_update, ECS_SYSTEM_ON_UPDATE, signature);
+
     // Entities creation
     ecs_entity_t player;
     ecs_create_entity(&player);
@@ -108,6 +112,11 @@ int main(void)
     ecs_add_component(player, mesh_t, NULL);
     ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=2 }));
     ecs_add_component(player, texture_t, &((texture_t){ .name="dungeon/tile_0099" }));
+
+    ecs_entity_t text;
+    ecs_create_entity(&text);
+    ecs_add_component(text, transform_t, &((transform_t){ .position={ } }));
+    ecs_add_component(text, text_t, &((text_t){ .text="H", .color={ 1, 1, 1 }, .size=0.1 }));
 
     // Map
     const map_t *map = get_map(MAP_FOREST);
