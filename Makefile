@@ -27,7 +27,8 @@ INCLUDE_DIR = $(LIBS_DIR)/glew/include \
 			  $(LIBS_DIR)/cglm/include \
 			  $(LIBS_DIR)/csimple-ecs/include \
 			  $(LIBS_DIR)/uthash/include \
-			  $(LIBS_DIR)/stb
+			  $(LIBS_DIR)/stb \
+			  $(LIBS_DIR)/jsmn
 INCLUDES = $(addprefix -I,$(SRC_DIR) $(INCLUDE_DIR))
 
 # C preprocessor settings

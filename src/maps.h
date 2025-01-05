@@ -7,6 +7,7 @@
 #ifndef MAPS_H
 #define MAPS_H
 
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -14,6 +15,8 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
+#include "utils/vector.h"
+
 #include <stdint.h>
 
 //------------------------------------------------------------------------------
@@ -29,19 +32,30 @@ extern "C" {
 //------------------------------------------------------------------------------
 typedef struct
 {
-    const uint8_t size;
-    uint8_t *map;
+    uint16_t id;
+    int x, y;
+    bool is_border;
+} tile_t;
+
+typedef struct
+{
+    uint16_t width, height;
+    vector_t tiles;
 } map_t;
 
 typedef enum
 {
-    MAP_FOREST,
+    MAP_STATION,
+    MAP_LABYRINTH,
+    MAP_TRAIN,
+    MAP_END,
 } map_id_t;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
-extern const map_t *const get_map(map_id_t id);
+extern map_t map_get(map_id_t id);
+extern void map_free(map_t map);
 
 //------------------------------------------------------------------------------
 // Inline Functions

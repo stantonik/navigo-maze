@@ -46,8 +46,12 @@ static void create_view_matrix(int tile_count_ver, mat4 view_matrix);
 //------------------------------------------------------------------------------
 ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
 {
-    ecs_get_component(it[0], camera_t, &camera);
-    ecs_get_component(it[0], transform_t, &transform);
+    if (count == 0) return ECS_ERR_NULL;
+
+    ecs_get_component(it[count - 1], camera_t, &camera);
+    ecs_get_component(it[count - 1], transform_t, &transform);
+
+    if (camera->zoom == 0) camera->zoom = 10;
 
     // Load uniform
     mat4 projection;
@@ -66,8 +70,13 @@ ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args)
 {
+    if (count == 0) return ECS_ERR_NULL;
+
+    camera_t *camera;
+    ecs_get_component(it[count - 1], camera_t, &camera);
+
     mat4 view;
-    create_view_matrix(10, view);
+    create_view_matrix(camera->zoom, view);
 
     shader_use(SHADER_WORLD);
     GLint view_loc = glGetUniformLocation(shader_get_program(SHADER_WORLD), "view");

@@ -71,7 +71,7 @@ typedef struct
 
 typedef struct
 {
-    char text[64];
+    char text[256];
     vec3 color;
     float size;
 } text_t;
@@ -85,7 +85,7 @@ typedef struct
 
 typedef struct
 {
-    
+    uint8_t zoom;
 } camera_t;
 
 #ifdef __cplusplus

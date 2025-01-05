@@ -10,3 +10,6 @@
 [submodule "libs/uthash"]
 	path = libs/uthash
 	url = https://github.com/troydhanson/uthash.git
+[submodule "libs/jsmn"]
+	path = libs/jsmn
+	url = https://github.com/zserge/jsmn.git

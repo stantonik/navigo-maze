@@ -21,6 +21,7 @@
 #include "maps.h"
 #include "shader.h"
 #include "systems.h"
+#include "utils/vector.h"
 
 //------------------------------------------------------------------------------
 // Macros
@@ -106,51 +107,53 @@ int main(void)
     // Entities creation
     ecs_entity_t player;
     ecs_create_entity(&player);
-    ecs_add_component(player, transform_t, &((transform_t){ .scale={ 1, 1, 1 } }));
+    ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 } }));
     ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, }));
     ecs_add_component(player, collider_t, &((collider_t){ .is_trigger=true }));
     ecs_add_component(player, mesh_t, NULL);
-    ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=2 }));
+    ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=3 }));
     ecs_add_component(player, texture_t, &((texture_t){ .name="dungeon/tile_0099" }));
-    ecs_add_component(player, camera_t, NULL);
+    ecs_add_component(player, camera_t, &((camera_t){ .zoom=20 }));
 
+    // Decrease FPS a lot
     ecs_entity_t text;
     ecs_create_entity(&text);
     ecs_add_component(text, transform_t, &((transform_t){ .position={ 0, 0, -0.9 } }));
-    ecs_add_component(text, text_t, &((text_t){ .text="Hello world!", .color={ 1, 1, 0 }, .size=0.1 }));
+    ecs_add_component(text, text_t, &((text_t){ .text="Hello world!", .color={ 1, 1, 0 }, .size=0.05 }));
 
     // Map
-    const map_t *map = get_map(MAP_FOREST);
-    ecs_entity_t tiles[map->size * map->size];
-    for (int y = 0; y < map->size; ++y)
+    map_t map = map_get(MAP_STATION);
+    vec2 offset = { 5, 5 };
+
+    printf("Map size (%u, %u)\n", map.width, map.height);
+    printf("Map tile count : %i\n", map.tiles.size);
+
+    ecs_entity_t tiles[map.tiles.size];
+    for (int i = 0; i < map.tiles.size; ++i)
     {
-        for (int x = 0; x < map->size; ++x)
+        tile_t tile;
+        vector_get_copy(&map.tiles, i, &tile);
+
+        ecs_entity_t etile;
+        ecs_create_entity(&etile);
+        tiles[i] = etile;
+
+        texture_t tex = { .name="city/tile_" };
+        char cid[5] = "";
+        sprintf(cid, "%04d", tile.id);
+        strcat(tex.name, cid);
+
+        ecs_add_component(etile, transform_t, &((transform_t){ .position={ tile.x - map.width / 2.f + offset[0], map.height / 2.f - tile.y + offset[1], 0.9 } }));
+        ecs_add_component(etile, mesh_t, NULL);
+        ecs_add_component(etile, texture_t, &tex);
+
+        if (tile.is_border)
         {
-            int tile_id = map->map[x + y * map->size];
-            /* if (tile_id == -1) */ 
-            /* { */
-            /*     continue; */
-            /* } */
-
-            ecs_create_entity(&tiles[x + y * map->size]);
-            ecs_entity_t tile = tiles[x + y * map->size];
-
-            texture_t tex = { .name="city/tile_" };
-            char cid[5] = "";
-            sprintf(cid, "%04d", tile_id);
-            strcat(tex.name, cid);
-
-            ecs_add_component(tile, transform_t, &((transform_t){ .position={ x - map->size / 2.f, y - map->size / 2.f, 0.5 } }));
-            ecs_add_component(tile, rigidbody_t, NULL);
-            ecs_add_component(tile, mesh_t, NULL);
-            ecs_add_component(tile, texture_t, &tex);
-
-            if (tile_id == 126)
-            {
-                ecs_add_component(tile, collider_t, NULL);
-            }
+            ecs_add_component(etile, rigidbody_t, NULL);
+            ecs_add_component(etile, collider_t, NULL);
         }
     }
+    map_free(map);
 
     // Start displaying
     GLFWwindow *window = gfx_get_window();
@@ -182,7 +185,7 @@ int main(void)
             fps_timer = 0.0;
         }
 
-        glClearColor(0.2f, 0.5f, 0.7f, 1.0f);
+        glClearColor(0.11f, 0.11f, 0.10f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ecs_listen_systems(ECS_SYSTEM_ON_UPDATE);
