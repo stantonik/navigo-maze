@@ -68,41 +68,41 @@ int main(void)
     // Systems registration
     ecs_signature_t signature;
     ecs_create_signature(&signature, controller_t);
-    ecs_register_system(system_controller_init, ECS_SYSTEM_ON_INIT, signature);
-    ecs_register_system(system_controller_update, ECS_SYSTEM_ON_UPDATE, signature);
+    ecs_register_system(system_controller_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_controller_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, transform_t);
-    ecs_register_system(system_mouvement_init, ECS_SYSTEM_ON_INIT, signature);
+    ecs_register_system(system_mouvement_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_create_signature(&signature, transform_t, rigidbody_t);
-    ecs_register_system(system_mouvement_update, ECS_SYSTEM_ON_UPDATE, signature);
+    ecs_register_system(system_mouvement_update, signature, ECS_SYSTEM_ON_UPDATE);
     ecs_set_system_parameters(system_mouvement_update, &dt);
 
     ecs_create_signature(&signature, transform_t, rigidbody_t, collider_t);
-    ecs_register_system(system_collider_init, ECS_SYSTEM_ON_INIT, signature);
-    ecs_register_system(system_collider_update, ECS_SYSTEM_ON_UPDATE, signature);
+    ecs_register_system(system_collider_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_collider_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, texture_t);
-    ecs_register_system(system_texture_init, ECS_SYSTEM_ON_INIT, signature);
+    ecs_register_system(system_texture_init, signature, ECS_SYSTEM_ON_INIT);
 
     ecs_create_signature(&signature, mesh_t, texture_t);
-    ecs_register_system(system_mesh_texture_update, ECS_SYSTEM_ON_INIT, signature);
+    ecs_register_system(system_mesh_texture_update, signature, ECS_SYSTEM_ON_INIT);
 
     ecs_create_signature(&signature, transform_t, mesh_t);
-    ecs_register_system(system_mesh_init, ECS_SYSTEM_ON_INIT, signature);
+    ecs_register_system(system_mesh_init, signature, ECS_SYSTEM_ON_INIT);
 
     ecs_create_signature(&signature, transform_t, rigidbody_t, mesh_t);
-    ecs_register_system(system_mesh_update, ECS_SYSTEM_ON_UPDATE, signature);
+    ecs_register_system(system_mesh_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, mesh_t);
-    ecs_register_system(system_mesh_draw, ECS_SYSTEM_ON_UPDATE, signature);
+    ecs_register_system(system_mesh_draw, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, transform_t, camera_t);
-    ecs_register_system(system_camera_init, ECS_SYSTEM_ON_INIT, signature);
-    ecs_register_system(system_camera_update, ECS_SYSTEM_ON_UPDATE, signature);
+    ecs_register_system(system_camera_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_camera_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, transform_t, text_t);
-    ecs_register_system(system_text_init, ECS_SYSTEM_ON_INIT, signature);
-    ecs_register_system(system_text_update, ECS_SYSTEM_ON_UPDATE, signature);
+    ecs_register_system(system_text_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_text_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     // Entities creation
     ecs_entity_t player;
