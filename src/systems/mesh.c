@@ -7,6 +7,10 @@
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
+#include "cglm/io.h"
+#include "cglm/types.h"
+#include "cglm/affine.h"
+#include "cglm/mat4.h"
 #include "cglm/vec3.h"
 #include "cglm/vec2.h"
 #include "components.h"
@@ -15,6 +19,7 @@
 #include "shader.h"
 #include "systems.h"
 #include "textures.h"
+#include "utils/vector.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,11 +27,25 @@
 //------------------------------------------------------------------------------
 // Macros
 //------------------------------------------------------------------------------
+#define ATTRIBUTE_POSITION 0
+#define ATTRIBUTE_MODEL_MAT_ROW0 1
+#define ATTRIBUTE_MODEL_MAT_ROW1 2
+#define ATTRIBUTE_MODEL_MAT_ROW2 3
+#define ATTRIBUTE_MODEL_MAT_ROW3 4
+#define ATTRIBUTE_COLOR 5
+#define ATTRIBUTE_UVOFFSET 6
+#define ATTRIBUTE_UVSCALE 7
 
 //------------------------------------------------------------------------------
 // Typedefs and Enums
 //------------------------------------------------------------------------------
-
+typedef struct
+{
+    mat4 model_mat;
+    vec4 color;
+    vec2 uvoffset;
+    vec2 uvscale;
+} instance_t;
 
 //------------------------------------------------------------------------------
 // Global Variables
@@ -35,23 +54,24 @@
 //------------------------------------------------------------------------------
 // Static Variables
 //------------------------------------------------------------------------------
-static const vec3 vertex_pos_unit[4] =
+static GLuint VAO, VBO, IBO;
+
+static const vec3 quad_vertices[6] =
 {
     { 1, 1, 0 }, // top-right
+    { 0, 1, 0 }, // top-left
+    { 1, 0, 0 }, // bottom-right
     { 1, 0, 0 }, // bottom-right
     { 0, 1, 0 }, // top-left
     { 0, 0, 0 }  // bottom-left
 };
 
-static const unsigned int indices[] = 
-{
-    0, 1, 2,
-    2, 1, 3 
-};
+vector_t instances;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
+static void create_model_matrix(transform_t *transform, mat4 model);
 
 //------------------------------------------------------------------------------
 // Function Implementations
@@ -60,49 +80,57 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
 {
     shader_use(SHADER_WORLD);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // Vertex buffer
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
+
+    // Position attribute
+    glVertexAttribPointer(ATTRIBUTE_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void *)0);
+    glEnableVertexAttribArray(ATTRIBUTE_POSITION);
+
+    // Instance buffer
+    vector_init(&instances, sizeof(instance_t), count);
     for (int i = 0; i < count; ++i)
     {
-        mesh_t *mesh;
-        transform_t *transform;
-        ecs_get_component(it[i], mesh_t, &mesh);
-        ecs_get_component(it[i], transform_t, &transform);
-
-        vec3 position;
-        vec3 scale;
-        vec3 offset;
-        glm_vec3_scale(transform->scale, 1.01f, scale); // avoid gap texture glitchs
-        glm_vec3_scale(transform->scale, 0.5f, offset);
-        glm_vec3_sub(transform->position, offset, position);
-
-        for (int i = 0; i < 4; i++) 
-        {
-            glm_vec3_mul((float *)vertex_pos_unit[i], scale, mesh->vertices[i].position);
-            glm_vec3_add(mesh->vertices[i].position, position, mesh->vertices[i].position);
-        }
-
-        glGenVertexArrays(1, &mesh->VAO);
-        glGenBuffers(1, &mesh->VBO);
-        glGenBuffers(1, &mesh->EBO);
-
-        glBindVertexArray(mesh->VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(mesh->vertices), mesh->vertices, GL_DYNAMIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-        // Position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void *)0);
-        glEnableVertexAttribArray(0);
-        // Texture coord attribute
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
-        glEnableVertexAttribArray(1);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0); 
-        glBindVertexArray(0);
+        vector_push_back(&instances, &(instance_t){});
     }
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ARRAY_BUFFER, instances.capacity * sizeof(instance_t), NULL, GL_DYNAMIC_DRAW);
+
+    // Model matrix attributes (4 rows)
+    for (int i = 0; i < 4; ++i) {
+        glVertexAttribPointer(ATTRIBUTE_MODEL_MAT_ROW0 + i, 4, GL_FLOAT, GL_FALSE, sizeof(instance_t), 
+                (void *)(offsetof(instance_t, model_mat) + i * sizeof(vec4)));
+        glEnableVertexAttribArray(ATTRIBUTE_MODEL_MAT_ROW0 + i);
+        glVertexAttribDivisor(ATTRIBUTE_MODEL_MAT_ROW0 + i, 1);
+    }
+
+    // Color attribute
+    glVertexAttribPointer(ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(instance_t), (void *)offsetof(instance_t, color));
+    glEnableVertexAttribArray(ATTRIBUTE_COLOR);
+    glVertexAttribDivisor(ATTRIBUTE_COLOR, 1);
+
+    // UV offset attribute
+    glVertexAttribPointer(ATTRIBUTE_UVOFFSET, 2, GL_FLOAT, GL_FALSE, sizeof(instance_t), (void *)offsetof(instance_t, uvoffset));
+    glEnableVertexAttribArray(ATTRIBUTE_UVOFFSET);
+    glVertexAttribDivisor(ATTRIBUTE_UVOFFSET, 1);
+
+    // UV scale attribute
+    glVertexAttribPointer(ATTRIBUTE_UVSCALE, 2, GL_FLOAT, GL_FALSE, sizeof(instance_t), (void *)offsetof(instance_t, uvscale));
+    glEnableVertexAttribArray(ATTRIBUTE_UVSCALE);
+    glVertexAttribDivisor(ATTRIBUTE_UVSCALE, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+    glBindVertexArray(0);
+
     return ECS_OK;
 }
 
@@ -112,15 +140,8 @@ ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_get_id());
 
-    for (int i = 0; i < count; ++i)
-    {
-        mesh_t *mesh;
-        ecs_get_component(it[i], mesh_t, &mesh);
-
-        glBindVertexArray(mesh->VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-    }
+    glBindVertexArray(VAO);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instances.size);
 
     return ECS_OK;
 }
@@ -128,52 +149,59 @@ ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
 ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
 {
     shader_use(SHADER_WORLD);
+    glBindBuffer(GL_ARRAY_BUFFER, IBO);
 
     for (int i = 0; i < count; ++i)
     {
-        mesh_t *mesh;
+        sprite_t *sprite;
+        ecs_get_component(it[i], sprite_t, &sprite);
         transform_t *transform;
-        ecs_get_component(it[i], mesh_t, &mesh);
         ecs_get_component(it[i], transform_t, &transform);
 
-        vec3 position;
-        vec3 scale;
-        vec3 offset;
-        glm_vec3_scale(transform->scale, 1.01f, scale); // avoid gap texture glitchs
-        glm_vec3_scale(transform->scale, 0.5f, offset);
-        glm_vec3_sub(transform->position, offset, position);
+        // Update instance
+        instance_t *instance;
+        vector_get(&instances, i, (void **)&instance);
 
-        for (int i = 0; i < 4; i++) 
-        {
-            glm_vec3_mul((float *)vertex_pos_unit[i], scale, mesh->vertices[i].position);
-            glm_vec3_add(mesh->vertices[i].position, position, mesh->vertices[i].position);
-        }
+        create_model_matrix(transform, instance->model_mat);
+        glm_vec3_one(instance->color);
 
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mesh->vertices), mesh->vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // UV
+        glm_vec2_sub(sprite->uv_max, sprite->uv_min, instance->uvscale);
+        glm_vec2_copy(sprite->uv_min, instance->uvoffset);
     }
 
-    return ECS_OK;
-}
-
-ecs_err_t system_mesh_texture_update(ecs_entity_t *it, int count, void *args)
-{
-    shader_use(SHADER_WORLD);
-
-    for (int i = 0; i < count; ++i)
+    if (count > instances.size)
     {
-        mesh_t *mesh;
-        texture_t *tex;
-        ecs_get_component(it[i], mesh_t, &mesh);
-        ecs_get_component(it[i], texture_t, &tex);
-
-        glm_vec2_copy(tex->uv_max, mesh->vertices[0].uv);
-        glm_vec2_copy((vec2){ tex->uv_max[0], tex->uv_min[1] }, mesh->vertices[1].uv);
-        glm_vec2_copy((vec2){ tex->uv_min[0], tex->uv_max[1] }, mesh->vertices[2].uv);
-        glm_vec2_copy(tex->uv_min, mesh->vertices[3].uv);
+        for (int i = 0; i < count - instances.size; ++i)
+        {
+            vector_push_back(&instances, &(instance_t){  });
+        }
     }
+    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size * instances.element_size, instances.data);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return ECS_OK;
 }
 
+inline void create_model_matrix(transform_t *transform, mat4 model)
+{
+    mat4 scale_matrix;
+    mat4 rotation_matrix;
+    mat4 translation_matrix;
+
+    glm_mat4_identity(scale_matrix);
+    glm_scale(scale_matrix, transform->scale);
+
+    glm_mat4_identity(rotation_matrix);
+    glm_rotate(rotation_matrix, glm_rad(transform->rotation[0]), (vec3){1.0f, 0.0f, 0.0f});
+    glm_rotate(rotation_matrix, glm_rad(transform->rotation[1]), (vec3){0.0f, 1.0f, 0.0f});
+    glm_rotate(rotation_matrix, glm_rad(transform->rotation[2]), (vec3){0.0f, 0.0f, 1.0f});
+
+    // Generate translation matrix
+    glm_mat4_identity(translation_matrix);
+    glm_translate(translation_matrix, transform->position); 
+
+    // Final model matrix = Translation * Rotation * Scale
+    glm_mat4_mul(translation_matrix, rotation_matrix, model);
+    glm_mat4_mul(model, scale_matrix, model);
+}

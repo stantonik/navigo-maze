@@ -52,22 +52,11 @@ typedef struct
 
 typedef struct
 {
-    vec3 position;
-    vec2 uv;
-} vertex_t;
-
-typedef struct
-{
-    GLuint VAO, VBO, EBO;
-    vertex_t vertices[4];
-} mesh_t;
-
-typedef struct
-{
-    char name[32];
+    char texture_name[32];
     int width, height;
+    vec3 color;
     vec2 uv_min, uv_max;
-} texture_t;
+} sprite_t;
 
 typedef struct
 {

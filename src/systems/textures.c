@@ -65,25 +65,25 @@ ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args)
 
     for (int i = 0; i < count; ++i)
     {
-        texture_t *tex;
-        ecs_get_component(it[i], texture_t, &tex);
+        sprite_t *tex;
+        ecs_get_component(it[i], sprite_t, &tex);
 
         char path[64];
         strcpy(path, TEXTURE_DIR"/");
-        strcat(path, tex->name);
+        strcat(path, tex->texture_name);
         strcat(path, TEXTURE_FORMAT);
 
         int ncha;
         stbi_info(path, &tex->width, &tex->height, &ncha);
 
-        if (!stoi_map_get(&name_to_texture_map, tex->name, NULL))
+        if (!stoi_map_get(&name_to_texture_map, tex->texture_name, NULL))
         {
             texture_info_t tex_info = { .width=tex->width, .height=tex->height, .nchannels=ncha };
             strcpy(tex_info.path, path);
 
             printf("Loaded texture : %s\n", path);
 
-            stoi_map_insert(&name_to_texture_map, tex->name, textures.size);
+            stoi_map_insert(&name_to_texture_map, tex->texture_name, textures.size);
             vector_push_back(&textures, &tex_info);
         }
     }
@@ -121,12 +121,12 @@ ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args)
 
     for (int i = 0; i < count; ++i)
     {
-        texture_t *tex;
-        ecs_get_component(it[i], texture_t, &tex);
+        sprite_t *tex;
+        ecs_get_component(it[i], sprite_t, &tex);
 
         int ind;
         texture_info_t *tex_info;
-        stoi_map_get(&name_to_texture_map, tex->name, &ind);
+        stoi_map_get(&name_to_texture_map, tex->texture_name, &ind);
         vector_get(&textures, ind, (void **)&tex_info);
 
         glm_vec2_copy((float[]){ tex_info->umin, tex_info->vmin }, tex->uv_min);

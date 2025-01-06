@@ -36,13 +36,7 @@
 //------------------------------------------------------------------------------
 GLuint bitmap_tex;
 
-GLuint VAO, VBO, EBO;
-
-static const unsigned int indices[] = 
-{
-    0, 1, 2,
-    2, 1, 3 
-};
+GLuint VAO, VBO, IBO;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
@@ -83,26 +77,7 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
     shader_use(SHADER_TEXT);
     glUniform1i(glGetUniformLocation(shader_get_program(SHADER_TEXT), "font_bitmap"), 1);
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * 4, NULL, GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void *)0);
-    glEnableVertexAttribArray(0);
-    // Texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void *)offsetof(vertex_t, uv));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    // TODO: Implement instanced rendering
 
     return ECS_OK;
 }
@@ -147,21 +122,21 @@ inline void render_text(const char *text, float x, float y, float z, float scale
         vec2 uvmin, uvmax;
         get_char_uv(c, uvmin, uvmax);
 
-        float xpos = x + (BITMAP_TILE_WIDTH * i * 0.8f) * scale;
-        float ypos = y - BITMAP_TILE_HEIGHT * scale;
+        /* float xpos = x + (BITMAP_TILE_WIDTH * i * 0.8f) * scale; */
+        /* float ypos = y - BITMAP_TILE_HEIGHT * scale; */
 
-        float w = BITMAP_TILE_WIDTH * scale;
-        float h = BITMAP_TILE_HEIGHT * scale;
+        /* float w = BITMAP_TILE_WIDTH * scale; */
+        /* float h = BITMAP_TILE_HEIGHT * scale; */
 
-        vertex_t vertices[4] = { { { xpos + w, ypos + h, z } }, { { xpos + w, ypos, z } }, { { xpos, ypos + h, z } }, { { xpos, ypos, z } } };
-        glm_vec2_copy(uvmax, vertices[0].uv);
-        glm_vec2_copy((vec2){ uvmax[0], uvmin[1] }, vertices[1].uv);
-        glm_vec2_copy((vec2){ uvmin[0], uvmax[1] }, vertices[2].uv);
-        glm_vec2_copy(uvmin, vertices[3].uv);
+        /* vertex_t vertices[4] = { { { xpos + w, ypos + h, z } }, { { xpos + w, ypos, z } }, { { xpos, ypos + h, z } }, { { xpos, ypos, z } } }; */
+        /* glm_vec2_copy(uvmax, vertices[0].uv); */
+        /* glm_vec2_copy((vec2){ uvmax[0], uvmin[1] }, vertices[1].uv); */
+        /* glm_vec2_copy((vec2){ uvmin[0], uvmax[1] }, vertices[2].uv); */
+        /* glm_vec2_copy(uvmin, vertices[3].uv); */
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        /* glBindBuffer(GL_ARRAY_BUFFER, VBO); */
+        /* glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices); */
+        /* glBindBuffer(GL_ARRAY_BUFFER, 0); */
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
