@@ -33,8 +33,8 @@
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
-static bool check_collision_2d(transform_t *t1, collider_t *c1, transform_t *t2, collider_t *c2);
-static bool check_all_collision_2d(transform_t *t1, collider_t *c1, int ind, ecs_entity_t *it, int count);
+static bool check_collision_2d(transform_t *t1, rect_collider_t *c1, transform_t *t2, rect_collider_t *c2);
+static bool check_all_collision_2d(transform_t *t1, rect_collider_t *c1, int ind, ecs_entity_t *it, int count);
 
 //------------------------------------------------------------------------------
 // Function Implementations
@@ -130,14 +130,9 @@ ecs_err_t system_collider_init(ecs_entity_t *it, int count, void *args)
     for (int i = 0; i < count; ++i)
     {
         transform_t *transform;
-        collider_t *collider;
+        rect_collider_t *collider;
         ecs_get_component(it[i], transform_t, &transform);
-        ecs_get_component(it[i], collider_t, &collider);
-
-        if (collider->shape == 0)
-        {
-            collider->shape = COLLIDER_SQUARE;
-        }
+        ecs_get_component(it[i], rect_collider_t, &collider);
 
         if (glm_vec3_eqv(collider->size, (vec3){ 0 }))
         {
@@ -148,7 +143,7 @@ ecs_err_t system_collider_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;       
 }
 
-inline bool check_collision_2d(transform_t *t1, collider_t *c1, transform_t *t2, collider_t *c2)
+inline bool check_collision_2d(transform_t *t1, rect_collider_t *c1, transform_t *t2, rect_collider_t *c2)
 {
     // Calculate the AABB min and max for the first collider in 2D
     float min1[3] = {
@@ -199,16 +194,16 @@ inline bool check_collision_2d(transform_t *t1, collider_t *c1, transform_t *t2,
 }
 
 
-inline bool check_all_collision_2d(transform_t *t1, collider_t *c1, int ind, ecs_entity_t *it, int count)
+inline bool check_all_collision_2d(transform_t *t1, rect_collider_t *c1, int ind, ecs_entity_t *it, int count)
 {
     for (int i = 0; i < count; ++i)
     {
         if (i == ind) continue;
 
         transform_t *ot;
-        collider_t *oc;
+        rect_collider_t *oc;
         ecs_get_component(it[i], transform_t, &ot);
-        ecs_get_component(it[i], collider_t, &oc);
+        ecs_get_component(it[i], rect_collider_t, &oc);
 
         if (check_collision_2d(t1, c1, ot, oc))
         {
@@ -223,8 +218,8 @@ ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args)
 {
     for (int i = 0; i < count; ++i)
     {
-        collider_t *collider;
-        ecs_get_component(it[i], collider_t, &collider);
+        rect_collider_t *collider;
+        ecs_get_component(it[i], rect_collider_t, &collider);
         if (!collider->is_trigger) 
         {
             continue;

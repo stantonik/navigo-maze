@@ -188,20 +188,27 @@ inline void create_model_matrix(transform_t *transform, mat4 model)
     mat4 scale_matrix;
     mat4 rotation_matrix;
     mat4 translation_matrix;
+    mat4 centering_matrix;
 
+    // Initialize matrices
     glm_mat4_identity(scale_matrix);
-    glm_scale(scale_matrix, transform->scale);
-
     glm_mat4_identity(rotation_matrix);
-    glm_rotate(rotation_matrix, glm_rad(transform->rotation[0]), (vec3){1.0f, 0.0f, 0.0f});
-    glm_rotate(rotation_matrix, glm_rad(transform->rotation[1]), (vec3){0.0f, 1.0f, 0.0f});
-    glm_rotate(rotation_matrix, glm_rad(transform->rotation[2]), (vec3){0.0f, 0.0f, 1.0f});
-
-    // Generate translation matrix
     glm_mat4_identity(translation_matrix);
+    glm_mat4_identity(centering_matrix);
+
+    vec2 scale;
+    glm_vec3_scale(transform->scale, 1.01f, scale); // avoid gap glitchs between tiles
+    glm_scale(scale_matrix, scale);
+
+    /* glm_rotate(rotation_matrix, glm_rad(transform->rotation[0]), (vec3){1.0f, 0.0f, 0.0f}); */
+    /* glm_rotate(rotation_matrix, glm_rad(transform->rotation[1]), (vec3){0.0f, 1.0f, 0.0f}); */
+    /* glm_rotate(rotation_matrix, glm_rad(transform->rotation[2]), (vec3){0.0f, 0.0f, 1.0f}); */
+    // Center the sprite (adjust for bottom-left reference point)
+    //
+    glm_translate(centering_matrix, (vec3){-transform->scale[0] / 2.0f, -transform->scale[1] / 2.0f, 0.0f});
     glm_translate(translation_matrix, transform->position); 
 
-    // Final model matrix = Translation * Rotation * Scale
-    glm_mat4_mul(translation_matrix, rotation_matrix, model);
+    glm_mat4_mul(centering_matrix, translation_matrix, model);
+    glm_mat4_mul(model, rotation_matrix, model);
     glm_mat4_mul(model, scale_matrix, model);
 }

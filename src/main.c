@@ -24,14 +24,6 @@
 #include "utils/vector.h"
 
 //------------------------------------------------------------------------------
-// Macros
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// Typedefs and Enums
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
 // Static Variables
 //------------------------------------------------------------------------------
 static float dt = 0;
@@ -58,7 +50,7 @@ int main(void)
     // Components registration
     ecs_register_component(transform_t);
     ecs_register_component(rigidbody_t);
-    ecs_register_component(collider_t);
+    ecs_register_component(rect_collider_t);
     ecs_register_component(sprite_t);
     ecs_register_component(controller_t);
     ecs_register_component(camera_t);
@@ -76,7 +68,7 @@ int main(void)
     ecs_register_system(system_mouvement_update, signature, ECS_SYSTEM_ON_UPDATE);
     ecs_set_system_parameters(system_mouvement_update, &dt);
 
-    ecs_create_signature(&signature, transform_t, rigidbody_t, collider_t);
+    ecs_create_signature(&signature, transform_t, rigidbody_t, rect_collider_t);
     ecs_register_system(system_collider_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_collider_update, signature, ECS_SYSTEM_ON_UPDATE);
 
@@ -101,9 +93,9 @@ int main(void)
     // Entities creation
     ecs_entity_t player;
     ecs_create_entity(&player);
-    ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 } }));
+    ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 }, .rotation={ 90, 0, 0 } }));
     ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, }));
-    ecs_add_component(player, collider_t, &((collider_t){ .is_trigger=true }));
+    ecs_add_component(player, rect_collider_t, &((rect_collider_t){ .is_trigger=true }));
     ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=3 }));
     ecs_add_component(player, sprite_t, &((sprite_t){ .texture_name="dungeon/tile_0099" }));
     ecs_add_component(player, camera_t, &((camera_t){ .zoom=20 }));
@@ -115,8 +107,8 @@ int main(void)
     /* ecs_add_component(text, text_t, &((text_t){ .text="Hello world!", .color={ 1, 1, 0 }, .size=0.05 })); */
 
     // Map
-    map_t map = map_get(MAP_STATION);
-    vec2 offset = { 5, 5 };
+    map_t map = map_get(MAP_ZEBRACROSSING);
+    vec2 offset = { 5, 10 };
 
     printf("Map size (%u, %u)\n", map.width, map.height);
     printf("Map tile count : %i\n", map.tiles.size);
@@ -142,7 +134,7 @@ int main(void)
         if (tile.is_border)
         {
             ecs_add_component(etile, rigidbody_t, NULL);
-            ecs_add_component(etile, collider_t, NULL);
+            ecs_add_component(etile, rect_collider_t, NULL);
         }
     }
     map_free(map);
@@ -154,6 +146,13 @@ int main(void)
     int frame_count = 0;
     float fps_timer = 0.0f;
     float fps;
+
+    transform_t *pt;
+    rigidbody_t *prb;
+    camera_t *pcam;
+    ecs_get_component(player, transform_t, &pt);
+    ecs_get_component(player, rigidbody_t, &prb);
+    ecs_get_component(player, camera_t, &pcam);
 
     ecs_listen_systems(ECS_SYSTEM_ON_INIT);
     // Game loop
@@ -170,6 +169,9 @@ int main(void)
 
         if (fps_timer >= 1.0)
         {
+            // Temporary
+            printf("player pos (%.1f, %.1f)\n", pt->position[0], pt->position[1]);
+
             fps = frame_count / fps_timer;
             printf("\rFPS: %.0f", fps);
             fflush(stdout);
@@ -180,6 +182,14 @@ int main(void)
         glClearColor(0.11f, 0.11f, 0.10f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        if (pt->position[1] > 10 && pt->position[1] < 14)
+        {
+            pcam->zoom = 1 / (pt->position[1] - 10 + 1) * 20;
+        }
+        if (pt->position[1] > 22)
+        {
+            pt->position[1] = 14;
+        }
         ecs_listen_systems(ECS_SYSTEM_ON_UPDATE);
 
         glfwPollEvents();

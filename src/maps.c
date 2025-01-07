@@ -50,17 +50,14 @@ map_t map_get(map_id_t id)
 
     switch (id) 
     {
-        case MAP_STATION:
-            sprintf(path, "%s/%s", MAP_DIR, "station.json");
+        case MAP_ZEBRACROSSING:
+            sprintf(path, "%s/%s", MAP_DIR, "zebracrossing.json");
             break;
         case MAP_LABYRINTH:
             sprintf(path, "%s/%s", MAP_DIR, "labyrinth.json");
             break;
         case MAP_TRAIN:
             sprintf(path, "%s/%s", MAP_DIR, "train.json");
-            break;
-        case MAP_END:
-            sprintf(path, "%s/%s", MAP_DIR, "end.json");
             break;
         default:
             return (map_t){  };

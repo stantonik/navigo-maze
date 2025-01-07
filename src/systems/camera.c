@@ -18,38 +18,18 @@
 #include "systems.h"
 
 //------------------------------------------------------------------------------
-// Macros
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// Typedefs and Enums
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// Global Variables
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// Static Variables
-//------------------------------------------------------------------------------
-static camera_t *camera;
-static transform_t *transform;
-
-//------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
 static void create_projection_matrix(float screen_width, float screen_height, mat4 proj_matrix);
-static void create_view_matrix(int tile_count_ver, mat4 view_matrix);
+static void create_view_matrix(float height, transform_t *transform, mat4 view_matrix);
 
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
 ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
 {
-    if (count == 0) return ECS_ERR_NULL;
-
+    camera_t *camera;
     ecs_get_component(it[count - 1], camera_t, &camera);
-    ecs_get_component(it[count - 1], transform_t, &transform);
 
     if (camera->zoom == 0) camera->zoom = 10;
 
@@ -70,13 +50,13 @@ ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
 
 ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args)
 {
-    if (count == 0) return ECS_ERR_NULL;
-
     camera_t *camera;
+    transform_t *transform;
     ecs_get_component(it[count - 1], camera_t, &camera);
+    ecs_get_component(it[count - 1], transform_t, &transform);
 
     mat4 view;
-    create_view_matrix(camera->zoom, view);
+    create_view_matrix(camera->zoom, transform, view);
 
     shader_use(SHADER_WORLD);
     GLint view_loc = glGetUniformLocation(shader_get_program(SHADER_WORLD), "view");
@@ -107,12 +87,12 @@ inline void create_projection_matrix(float screen_width, float screen_height, ma
     }
 }
 
-inline void create_view_matrix(int tile_count_ver, mat4 view_matrix)
+inline void create_view_matrix(float height, transform_t *transform, mat4 view_matrix)
 {
     glm_mat4_identity(view_matrix);
 
-    view_matrix[0][0] = 2.0f / tile_count_ver;
-    view_matrix[1][1] = 2.0f / tile_count_ver;
+    view_matrix[0][0] = 2.0f / height;
+    view_matrix[1][1] = 2.0f / height;
 
     vec3 pos;
     glm_vec3_scale(transform->position, -1.0f, pos);
