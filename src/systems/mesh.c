@@ -163,7 +163,7 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
         vector_get(&instances, i, (void **)&instance);
 
         create_model_matrix(transform, instance->model_mat);
-        glm_vec3_one(instance->color);
+        glm_vec4_copy(sprite->color, instance->color);
 
         // UV
         glm_vec2_sub(sprite->uv_max, sprite->uv_min, instance->uvscale);
@@ -206,7 +206,7 @@ inline void create_model_matrix(transform_t *transform, mat4 model)
     /* glm_rotate(rotation_matrix, glm_rad(transform->rotation[2]), (vec3){0.0f, 0.0f, 1.0f}); */
     // Center the sprite (adjust for bottom-left reference point)
     //
-    glm_translate(centering_matrix, (vec3){-transform->scale[0] / 2.0f, -transform->scale[1] / 2.0f, 0.0f});
+    glm_translate(centering_matrix, (vec3){-scale[0] / 2.0f, -scale[1] / 2.0f, 0.0f});
     glm_translate(translation_matrix, transform->position); 
 
     glm_mat4_mul(centering_matrix, translation_matrix, model);

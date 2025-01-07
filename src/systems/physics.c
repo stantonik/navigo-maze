@@ -13,6 +13,7 @@
 #include "ecs/ecs.h"
 #include "ecs/ecs_err.h"
 #include "systems.h"
+#include "utils/vector.h"
 
 //------------------------------------------------------------------------------
 // Macros
@@ -71,49 +72,52 @@ ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args)
             rb->velocity[1] -= 9.81 * dt;
         }
 
-        float normal_force = rb->mass * 9.81f;
-        float friction_force = 0.05f * normal_force;
-
-        float friction_direction_x = (rb->velocity[0] > 0) ? -1.0f : 1.0f;
-        float friction_direction_y = (rb->velocity[1] > 0) ? -1.0f : 1.0f;
-
-        if (fabs(rb->velocity[0]) > 0) 
+        if (fabs(rb->friction) > 10.0e-7f)
         {
-            rb->velocity[0] += friction_direction_x * friction_force * dt;
-        } 
+            float normal_force = rb->mass * 9.81f;
+            float friction_force = rb->friction * normal_force;
 
-        if (fabs(rb->velocity[1]) > 0)
-        {
-            rb->velocity[1] += friction_direction_y * friction_force * dt;
-        }
+            float friction_direction_x = (rb->velocity[0] > 0) ? -1.0f : 1.0f;
+            float friction_direction_y = (rb->velocity[1] > 0) ? -1.0f : 1.0f;
 
-        if (friction_direction_x < 0)
-        {
-            if (rb->velocity[0] < 0)
+            if (fabs(rb->velocity[0]) > 0) 
             {
-                rb->velocity[0] = 0;
+                rb->velocity[0] += friction_direction_x * friction_force * dt;
+            } 
+
+            if (fabs(rb->velocity[1]) > 0)
+            {
+                rb->velocity[1] += friction_direction_y * friction_force * dt;
             }
-        }
-        else
-        {
-            if (rb->velocity[0] > 0)
-            {
-                rb->velocity[0] = 0;
-            }
-        }
 
-        if (friction_direction_y < 0)
-        {
-            if (rb->velocity[1] < 0)
+            if (friction_direction_x < 0)
             {
-                rb->velocity[1] = 0;
+                if (rb->velocity[0] < 0)
+                {
+                    rb->velocity[0] = 0;
+                }
             }
-        }
-        else
-        {
-            if (rb->velocity[1] > 0)
+            else
             {
-                rb->velocity[1] = 0;
+                if (rb->velocity[0] > 0)
+                {
+                    rb->velocity[0] = 0;
+                }
+            }
+
+            if (friction_direction_y < 0)
+            {
+                if (rb->velocity[1] < 0)
+                {
+                    rb->velocity[1] = 0;
+                }
+            }
+            else
+            {
+                if (rb->velocity[1] > 0)
+                {
+                    rb->velocity[1] = 0;
+                }
             }
         }
 
@@ -134,10 +138,25 @@ ecs_err_t system_collider_init(ecs_entity_t *it, int count, void *args)
         ecs_get_component(it[i], transform_t, &transform);
         ecs_get_component(it[i], rect_collider_t, &collider);
 
+        vector_init(&collider->entities, sizeof(ecs_entity_t), 1);
+
         if (glm_vec3_eqv(collider->size, (vec3){ 0 }))
         {
             glm_vec3_copy(transform->scale, collider->size);
         }
+    }
+
+    return ECS_OK;       
+}
+
+ecs_err_t system_collider_end(ecs_entity_t *it, int count, void *args)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        rect_collider_t *collider;
+        ecs_get_component(it[i], rect_collider_t, &collider);
+
+        vector_free(&collider->entities);
     }
 
     return ECS_OK;       
@@ -194,24 +213,28 @@ inline bool check_collision_2d(transform_t *t1, rect_collider_t *c1, transform_t
 }
 
 
-inline bool check_all_collision_2d(transform_t *t1, rect_collider_t *c1, int ind, ecs_entity_t *it, int count)
+inline bool check_all_collision_2d(transform_t *t, rect_collider_t *c, int ind, ecs_entity_t *others, int count)
 {
+    bool col = false;
+    vector_clear(&c->entities);
+
     for (int i = 0; i < count; ++i)
     {
         if (i == ind) continue;
 
         transform_t *ot;
         rect_collider_t *oc;
-        ecs_get_component(it[i], transform_t, &ot);
-        ecs_get_component(it[i], rect_collider_t, &oc);
+        ecs_get_component(others[i], transform_t, &ot);
+        ecs_get_component(others[i], rect_collider_t, &oc);
 
-        if (check_collision_2d(t1, c1, ot, oc))
+        if (check_collision_2d(t, c, ot, oc))
         {
-            return true;
+            vector_push_back(&c->entities, &others[i]);
+            col = true;
         }
     }      
 
-    return false;
+    return col;
 }
 
 ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args)
@@ -242,7 +265,7 @@ ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args)
             vec3 offset;
             glm_vec3_scale(collider->impact_normal, 0.008f, offset);
             glm_vec3_add(offset, collider->impact_position, last_pos);
-            
+
             glm_vec3_copy(last_pos, transform->position);
         }
         else

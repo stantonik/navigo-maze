@@ -41,9 +41,11 @@ extern ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args)
 extern ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args);
 extern ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args);
 
-//------------------------------------------------------------------------------
-// Inline Functions
-//------------------------------------------------------------------------------
+extern ecs_err_t system_enemy_init(ecs_entity_t *it, int count, void *args);
+extern ecs_err_t system_enemy_update(ecs_entity_t *it, int count, void *args);
+
+extern ecs_err_t system_player_init(ecs_entity_t *it, int count, void *args);
+extern ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args);
 
 #ifdef __cplusplus
 }

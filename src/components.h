@@ -17,6 +17,7 @@ extern "C" {
 #include "GL/glew.h"
 #include "cglm/types.h"
 #include "stdbool.h"
+#include "utils/vector.h"
 
 //------------------------------------------------------------------------------
 // Typedefs and Enums
@@ -31,6 +32,7 @@ typedef struct
 typedef struct
 {
     vec3 velocity;
+    float friction;
     float mass;
     bool gravity;
 } rigidbody_t;
@@ -42,13 +44,14 @@ typedef struct
     vec3 size;
     vec3 impact_position;
     vec3 impact_normal;
+    vector_t entities;
 } rect_collider_t;
 
 typedef struct
 {
     char texture_name[32];
     int width, height;
-    vec3 color;
+    vec4 color;
     vec2 uv_min, uv_max;
 } sprite_t;
 
@@ -68,7 +71,13 @@ typedef struct
 
 typedef struct
 {
+    
+} enemy_t;
+
+typedef struct
+{
     float zoom;
+    float color_filter_strength;
 } camera_t;
 
 #ifdef __cplusplus
