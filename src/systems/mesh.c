@@ -175,6 +175,7 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
         for (int i = 0; i < count - instances.size; ++i)
         {
             vector_push_back(&instances, &(instance_t){  });
+            glBufferData(GL_ARRAY_BUFFER, instances.size * instances.element_size, NULL, GL_DYNAMIC_DRAW);
         }
     }
     glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size * instances.element_size, instances.data);

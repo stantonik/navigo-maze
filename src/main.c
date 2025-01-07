@@ -86,7 +86,7 @@ int main(void)
     ecs_register_system(system_camera_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_camera_update, signature, ECS_SYSTEM_ON_UPDATE);
 
-    /* ecs_create_signature(&signature, transform_t, text_t); */
+    ecs_create_signature(&signature, transform_t, text_t);
     /* ecs_register_system(system_text_init, signature, ECS_SYSTEM_ON_INIT); */
     /* ecs_register_system(system_text_update, signature, ECS_SYSTEM_ON_UPDATE); */
 
