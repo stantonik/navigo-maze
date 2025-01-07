@@ -58,19 +58,26 @@ int main(void)
     ecs_register_component(camera_t);
     ecs_register_component(text_t);
     ecs_register_component(enemy_t);
+    ecs_register_component(audio_t);
 
     // Systems registration
     ecs_signature_t signature;
     ecs_create_signature(&signature, sprite_t);
     ecs_register_system(system_texture_init, signature, ECS_SYSTEM_ON_INIT);
 
+    ecs_create_signature(&signature, audio_t);
+    ecs_register_system(system_audio_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_audio_update, signature, ECS_SYSTEM_ON_UPDATE);
+
+    ecs_create_signature(&signature, transform_t, sprite_t);
+    ecs_register_system(system_mesh_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_mesh_update, signature, ECS_SYSTEM_ON_UPDATE);
+    ecs_create_signature(&signature, sprite_t);
+    ecs_register_system(system_mesh_draw, signature, ECS_SYSTEM_ON_UPDATE);
+
     ecs_create_signature(&signature, transform_t, camera_t);
     ecs_register_system(system_camera_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_camera_update, signature, ECS_SYSTEM_ON_UPDATE);
-
-    ecs_create_signature(&signature, controller_t);
-    ecs_register_system(system_controller_init, signature, ECS_SYSTEM_ON_INIT);
-    ecs_register_system(system_controller_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, transform_t, rigidbody_t, enemy_t);
     ecs_register_system(system_enemy_init, signature, ECS_SYSTEM_ON_INIT);
@@ -82,21 +89,20 @@ int main(void)
     void *player_args[2] = { (void *)&gameover, (void *)&dt };
     ecs_set_system_parameters(system_player_update, player_args);
 
-    ecs_create_signature(&signature, transform_t, rigidbody_t, rect_collider_t);
-    ecs_register_system(system_collider_init, signature, ECS_SYSTEM_ON_INIT);
-    ecs_register_system(system_collider_update, signature, ECS_SYSTEM_ON_UPDATE);
-
     ecs_create_signature(&signature, transform_t);
     ecs_register_system(system_mouvement_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_create_signature(&signature, transform_t, rigidbody_t);
     ecs_register_system(system_mouvement_update, signature, ECS_SYSTEM_ON_UPDATE);
     ecs_set_system_parameters(system_mouvement_update, &dt);
 
-    ecs_create_signature(&signature, transform_t, sprite_t);
-    ecs_register_system(system_mesh_init, signature, ECS_SYSTEM_ON_INIT);
-    ecs_register_system(system_mesh_update, signature, ECS_SYSTEM_ON_UPDATE);
-    ecs_create_signature(&signature, sprite_t);
-    ecs_register_system(system_mesh_draw, signature, ECS_SYSTEM_ON_UPDATE);
+    ecs_create_signature(&signature, controller_t);
+    ecs_register_system(system_controller_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_controller_update, signature, ECS_SYSTEM_ON_UPDATE);
+
+    ecs_create_signature(&signature, transform_t, rigidbody_t, rect_collider_t);
+    ecs_register_system(system_collider_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_collider_update, signature, ECS_SYSTEM_ON_UPDATE);
+
 
     /* ecs_create_signature(&signature, transform_t, text_t); */
     /* ecs_register_system(system_text_init, signature, ECS_SYSTEM_ON_INIT); */
@@ -113,11 +119,12 @@ int main(void)
     ecs_entity_t player;
     ecs_create_entity(&player);
     ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 } }));
-    ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, .friction=0.005f }));
+    ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, .friction=0.001f }));
     ecs_add_component(player, rect_collider_t, &((rect_collider_t){ .is_trigger=true, .size={ 0.6, 0.6 } }));
     ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=3 }));
     ecs_add_component(player, sprite_t, &((sprite_t){ .texture_name="player" }));
     ecs_add_component(player, camera_t, &((camera_t){ .zoom=20 }));
+    ecs_add_component(player, audio_t, &((audio_t){ .name="bg", .volume=0.5, .loop=true, .playing=true }));
 
     // Velo enemies
     ecs_entity_t enemies[10];

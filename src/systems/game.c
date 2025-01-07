@@ -93,9 +93,22 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args)
 
         if (*gameover)
         {
-                glm_vec3_zero(rb->velocity);
+                controller_t *ctrl;
+                audio_t *audio;
+                ecs_get_component(it[i], controller_t, &ctrl);
+                ecs_get_component(it[i], audio_t, &audio);
+
+                ctrl->run_speed = 0;
+                ctrl->walk_speed = 0;
                 cam->color_filter_strength += dt * 0.7f;
                 if (cam->color_filter_strength > 1) cam->color_filter_strength = 1;
+                cam->detach = true;
+                audio->volume -= dt * 0.2;
+                if (audio->volume < 0) 
+                {
+                    audio->volume = 0;
+                    audio->playing = false;
+                }
         }
 
         /* printf("player pos (%.1f, %.1f)\n", t->position[0], t->position[1]); */

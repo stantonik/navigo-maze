@@ -14,6 +14,9 @@ EXEC = NavigoMaze
 # Build directory
 BUILD_DIR_ROOT = build
 
+# Assets directories
+ASSETS_DIR = res
+
 # Sources
 SRC_DIR = src
 SRCS := $(sort $(shell find $(SRC_DIR) -name '*.c'))
@@ -28,7 +31,8 @@ INCLUDE_DIR = $(LIBS_DIR)/glew/include \
 			  $(LIBS_DIR)/csimple-ecs/include \
 			  $(LIBS_DIR)/uthash/include \
 			  $(LIBS_DIR)/stb \
-			  $(LIBS_DIR)/jsmn
+			  $(LIBS_DIR)/jsmn \
+			  $(LIBS_DIR)/miniaudio
 INCLUDES = $(addprefix -I,$(SRC_DIR) $(INCLUDE_DIR))
 
 # C preprocessor settings
@@ -136,6 +140,14 @@ run: $(BIN_DIR)/$(EXEC)
 	# @cd $(BIN_DIR) && ./$(EXEC)
 	$(BIN_DIR)/$(EXEC)
 
+# Copy assets to bin directory
+.PHONY: copyassets
+copyassets:
+	@echo "Copying assets to $(BIN_DIR)"
+	@mkdir -p $(BIN_DIR)
+	@rm -rf $(BIN_DIR)/$(ASSETS_DIR)
+	@cp -R $(ASSETS_DIR) $(BIN_DIR)/
+
 .PHONY: clean
 clean:
 	$(RM) -rf $(BUILD_DIR)
@@ -169,6 +181,7 @@ help:
 	Targets:\n\
 	  all             Build executable (default target)\n\
 	  run             Build and run executable\n\
+	  copyassets      Copy assets to executable directory\n\
 	  clean           Clean build directory (all platforms)\n\
 	  compdb          Generate JSON compilation database (compile_commands.json)\n\
 	  help            Print this information\n"

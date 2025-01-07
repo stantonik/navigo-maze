@@ -14,8 +14,9 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
-#include "GL/glew.h"
 #include "cglm/types.h"
+#include "GL/glew.h"
+#include "miniaudio.h"
 #include "stdbool.h"
 #include "utils/vector.h"
 
@@ -62,6 +63,16 @@ typedef struct
     float size;
 } text_t;
 
+typedef struct
+{
+    char name[32];
+    float volume;
+    bool loop;
+    bool playing;
+    ma_sound sound;
+    bool init;
+} audio_t;
+
 typedef struct 
 { 
     float walk_speed;
@@ -71,13 +82,14 @@ typedef struct
 
 typedef struct
 {
-    
+    int dummy;
 } enemy_t;
 
 typedef struct
 {
     float zoom;
     float color_filter_strength;
+    bool detach;
 } camera_t;
 
 #ifdef __cplusplus

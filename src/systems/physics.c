@@ -206,9 +206,6 @@ inline bool check_collision_2d(transform_t *t1, rect_collider_t *c1, transform_t
         return true;
     }
 
-    c1->impact_normal[0] = 0.0f;
-    c1->impact_normal[1] = 0.0f;
-
     return false;
 }
 

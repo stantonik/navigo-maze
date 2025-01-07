@@ -105,7 +105,6 @@ ecs_err_t system_controller_update(ecs_entity_t *it, int count, void *args)
         glm_vec3_normalize(velocity);
         glm_vec3_scale(velocity, ctrl->walk_speed, velocity);
         glm_vec3_copy(velocity, rb->velocity);
-
     }
 
     return ECS_OK;

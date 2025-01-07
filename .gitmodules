@@ -13,3 +13,6 @@
 [submodule "libs/jsmn"]
 	path = libs/jsmn
 	url = https://github.com/zserge/jsmn.git
+[submodule "libs/miniaudio"]
+	path = libs/miniaudio
+	url = https://github.com/mackron/miniaudio.git
