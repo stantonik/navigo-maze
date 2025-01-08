@@ -118,28 +118,33 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
 #define ROAD_X_MIN 12
 #define ROAD_X_MAX 16
 #define BACKWARD_FREEDOM 1
-            /* printf("player pos (%.1f, %.1f)\n", t->position[0], t->position[1]); */
 
-            vec3 cam_target_pos;
-            glm_vec3_copy(t->position, cam_target_pos);
-
-            // Smooth zoom entry
-            if (t->position[1] > ROAD_Y_TRANS_BEGIN && t->position[1] < ROAD_Y_TRANS_END)
-            {
-                float normalized_y = (t->position[1] - ROAD_Y_TRANS_BEGIN) / (ROAD_Y_TRANS_END - ROAD_Y_TRANS_BEGIN);
-                float eased_y = normalized_y * normalized_y * (3.0f - 2.0f * normalized_y);
-                float target_zoom = 20 + (ROAD_CAM_ZOOM - 20) * eased_y;
-                cam->zoom = glm_lerp(cam->zoom, target_zoom, 1.0f - expf(-5.0 * dt));
-            }
+            printf("player pos (%.1f, %.1f)\n", t->position[0], t->position[1]);
 
             // Constrain player on the Y axe
             if (t->position[1] > ROAD_Y_END)
             {
-                t->position[1] = ROAD_Y_BEGIN;
-                cam_tranform->position[1] = ROAD_Y_BEGIN;
-            }
+                float previous_player_pos_y = t->position[1];
 
-            if (t->position[1] <= ROAD_Y_END && t->position[1] >= ROAD_Y_BEGIN)
+                t->position[1] = ROAD_Y_BEGIN;
+
+                if (previous_player_pos_y != ROAD_Y_BEGIN)
+                {
+                    float cam_offset = cam_tranform->position[1] - previous_player_pos_y;
+                    cam_tranform->position[1] = ROAD_Y_BEGIN + cam_offset;
+                }
+            }
+            vec3 cam_target_pos;
+            glm_vec3_copy(t->position, cam_target_pos);
+
+            // Smooth zoom entry
+            float target_zoom = 20 + (ROAD_CAM_ZOOM - 20) * (t->position[1] - ROAD_Y_TRANS_BEGIN) / (ROAD_Y_TRANS_END - ROAD_Y_TRANS_BEGIN);
+            target_zoom = glm_clamp(target_zoom, ROAD_CAM_ZOOM, 20);
+            float zoom_factor = 1.0f - expf(-5 * dt);
+            cam->zoom = glm_lerp(cam->zoom, target_zoom, zoom_factor);
+
+
+            if (t->position[1] <= ROAD_Y_END && t->position[1] >= ROAD_Y_TRANS_END)
             {
                 // Forbid to go too backward
                 if (t->position[1] < cam_tranform->position[1] - BACKWARD_FREEDOM)
@@ -151,14 +156,14 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
                 }
 
                 // Move camera on Y only if we go upward
-                if (cam_target_pos[1] < cam_tranform->position[1])
+                if (cam_target_pos[1] < cam_tranform->position[1] && glm_vec3_distance(cam_target_pos, t->position) < 3)
                 {
                     cam_target_pos[1] = cam_tranform->position[1];
                 } 
             }
             if (t->position[1] <= ROAD_Y_END && t->position[1] >= ROAD_Y_TRANS_BEGIN)
             {
-               // Constrain player on the road on the X axe
+                // Constrain player on the road on the X axe
                 if (t->position[0] < ROAD_X_MIN)
                 {
                     if (rb->velocity[0] < 0)

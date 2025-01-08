@@ -179,19 +179,19 @@ inline void init_game()
     ecs_add_component(player, player_t, &((player_t){ .camera=camera, .cam_lerp_speed=10 }));
 
     // Velo enemies
-    ecs_entity_t enemies[10];
-    for (int i = 0; i < sizeof(enemies) / sizeof(enemies[0]); ++i)
-    {
-        ecs_entity_t enemy;
-        ecs_create_entity(&enemy);
-        ecs_add_component(enemy, transform_t, &((transform_t){ .position={ 12, 20 }, .scale={ 1.2, 1.2, 1 } }));
-        ecs_add_component(enemy, rigidbody_t, &((rigidbody_t){ .mass=70 }));
-        ecs_add_component(enemy, rect_collider_t, &((rect_collider_t){ .size={ 1, 1.2 } }));
-        ecs_add_component(enemy, sprite_t, &((sprite_t){ .texture_name="enemy_velo" }));
-        ecs_add_component(enemy, enemy_t, NULL);
+    /* ecs_entity_t enemies[10]; */
+    /* for (int i = 0; i < sizeof(enemies) / sizeof(enemies[0]); ++i) */
+    /* { */
+    /*     ecs_entity_t enemy; */
+    /*     ecs_create_entity(&enemy); */
+    /*     ecs_add_component(enemy, transform_t, &((transform_t){ .position={ 12, 20 }, .scale={ 1.2, 1.2, 1 } })); */
+    /*     ecs_add_component(enemy, rigidbody_t, &((rigidbody_t){ .mass=70 })); */
+    /*     ecs_add_component(enemy, rect_collider_t, &((rect_collider_t){ .size={ 1, 1.2 } })); */
+    /*     ecs_add_component(enemy, sprite_t, &((sprite_t){ .texture_name="enemy_velo" })); */
+    /*     ecs_add_component(enemy, enemy_t, NULL); */
 
-        enemies[i] = enemy;
-    }
+    /*     enemies[i] = enemy; */
+    /* } */
 
     // Text
     ecs_entity_t text;
@@ -200,7 +200,8 @@ inline void init_game()
     ecs_add_component(text, text_t, &((text_t){ 
                 .text="You woke up lost from a French soiree " \
                 "with the only memory of an important rendez-vous. "\
-                "You have to hurry up. But you lost your Navigo so you have to walk!",
+                "You have to hurry up but you have lost your Navigo "\
+                "so take a walk and enjoy the views!",
                 .color={ 1, 1, 1, 0.8 }, .size=0.5f, .camera=camera, .max_width=5}));
 
     // Map generation
