@@ -31,6 +31,8 @@ static float dt = 0;
 static bool gameover = false;
 static bool restart = false;
 
+ecs_entity_t player;
+
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
@@ -132,16 +134,16 @@ inline void init_game()
     ecs_register_system(system_camera_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_camera_update, signature, ECS_SYSTEM_ON_UPDATE);
 
-    ecs_create_signature(&signature, transform_t, rigidbody_t, enemy_t);
-    ecs_register_system(system_enemy_init, signature, ECS_SYSTEM_ON_INIT);
-    ecs_register_system(system_enemy_update, signature, ECS_SYSTEM_ON_UPDATE);
-
     ecs_create_signature(&signature, transform_t, rigidbody_t, controller_t, rect_collider_t, player_t);
     ecs_register_system(system_player_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_player_update, signature, ECS_SYSTEM_ON_UPDATE);
     ecs_set_system_parameters(system_player_update, 2, (void *[]){ &gameover, &dt });
     ecs_register_system(system_player_restart, signature, ECS_SYSTEM_ON_UPDATE);
     ecs_set_system_parameters(system_player_restart, 2, (void *[]){ &gameover, &restart });
+
+    ecs_create_signature(&signature, transform_t, rigidbody_t, enemy_t);
+    ecs_register_system(system_enemy_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_enemy_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, transform_t);
     ecs_register_system(system_mouvement_init, signature, ECS_SYSTEM_ON_INIT);
@@ -168,7 +170,6 @@ inline void init_game()
     ecs_add_component(camera, transform_t, NULL);
     ecs_add_component(camera, camera_t, &((camera_t){ .zoom=20 }));
 
-    ecs_entity_t player;
     ecs_create_entity(&player);
     ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 } }));
     ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, .friction=0.001f }));
@@ -177,21 +178,22 @@ inline void init_game()
     ecs_add_component(player, sprite_t, &((sprite_t){ .texture_name="player" }));
     ecs_add_component(player, audio_t, &((audio_t){ .name="bg", .volume=0.5, .loop=true, .playing=true }));
     ecs_add_component(player, player_t, &((player_t){ .camera=camera, .cam_lerp_speed=10 }));
+    ecs_set_system_parameters(system_enemy_update, 1, (void *[]){ &player });
 
     // Velo enemies
-    /* ecs_entity_t enemies[10]; */
-    /* for (int i = 0; i < sizeof(enemies) / sizeof(enemies[0]); ++i) */
-    /* { */
-    /*     ecs_entity_t enemy; */
-    /*     ecs_create_entity(&enemy); */
-    /*     ecs_add_component(enemy, transform_t, &((transform_t){ .position={ 12, 20 }, .scale={ 1.2, 1.2, 1 } })); */
-    /*     ecs_add_component(enemy, rigidbody_t, &((rigidbody_t){ .mass=70 })); */
-    /*     ecs_add_component(enemy, rect_collider_t, &((rect_collider_t){ .size={ 1, 1.2 } })); */
-    /*     ecs_add_component(enemy, sprite_t, &((sprite_t){ .texture_name="enemy_velo" })); */
-    /*     ecs_add_component(enemy, enemy_t, NULL); */
+    ecs_entity_t enemies[10];
+    for (int i = 0; i < sizeof(enemies) / sizeof(enemies[0]); ++i)
+    {
+        ecs_entity_t enemy;
+        ecs_create_entity(&enemy);
+        ecs_add_component(enemy, transform_t, &((transform_t){ .position={ 12, 20 }, .scale={ 1.2, 1.2, 1 } }));
+        ecs_add_component(enemy, rigidbody_t, &((rigidbody_t){ .mass=70 }));
+        ecs_add_component(enemy, rect_collider_t, &((rect_collider_t){ .size={ 1, 1 } }));
+        ecs_add_component(enemy, sprite_t, &((sprite_t){ .texture_name="enemy_velo" }));
+        ecs_add_component(enemy, enemy_t, NULL);
 
-    /*     enemies[i] = enemy; */
-    /* } */
+        enemies[i] = enemy;
+    }
 
     // Text
     ecs_entity_t text;

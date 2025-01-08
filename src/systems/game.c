@@ -19,6 +19,18 @@
 #include <stdio.h>
 
 //------------------------------------------------------------------------------
+// Macros
+//------------------------------------------------------------------------------
+#define ROAD_CAM_ZOOM 5
+#define ROAD_Y_TRANS_BEGIN 10
+#define ROAD_Y_TRANS_END 12
+#define ROAD_Y_BEGIN 16
+#define ROAD_Y_END 22
+#define ROAD_X_MIN 12
+#define ROAD_X_MAX 16
+#define BACKWARD_FREEDOM 1
+
+//------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
 ecs_err_t system_enemy_init(ecs_entity_t *it, int count, void *args[])
@@ -44,6 +56,10 @@ ecs_err_t system_enemy_init(ecs_entity_t *it, int count, void *args[])
 
 ecs_err_t system_enemy_update(ecs_entity_t *it, int count, void *args[])
 {
+    ecs_entity_t ep = *(ecs_entity_t *)args[0];
+    player_t *player;
+    ecs_get_component(ep, player_t, &player);
+
     for (int i = 0; i < count; ++i)
     {
         transform_t *t;
@@ -51,10 +67,29 @@ ecs_err_t system_enemy_update(ecs_entity_t *it, int count, void *args[])
         ecs_get_component(it[i], transform_t, &t);
         ecs_get_component(it[i], rigidbody_t, &rb);
 
+        if (player->tped)
+        {
+            int xview = ROAD_CAM_ZOOM / 2;
+            int dx = ROAD_Y_END - ROAD_Y_BEGIN;
+            if (t->position[1] <= ROAD_Y_END + xview && t->position[1] >= ROAD_Y_END - xview)
+            {
+                t->position[1] -= dx;
+            }
+            else if (t->position[1] <= ROAD_Y_BEGIN + xview && t->position[1] >= ROAD_Y_BEGIN - xview)
+            {
+                t->position[1] += dx;
+            }
+        }
+
         if (t->position[0] > 16)
         {
             t->position[0] = 8;
         }
+    }
+
+    if (player->tped)
+    {
+        player->tped = false;
     }
 
     return ECS_OK;
@@ -110,16 +145,7 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
         }
         else
         {
-#define ROAD_CAM_ZOOM 5
-#define ROAD_Y_TRANS_BEGIN 10
-#define ROAD_Y_TRANS_END 12
-#define ROAD_Y_BEGIN 16
-#define ROAD_Y_END 22
-#define ROAD_X_MIN 12
-#define ROAD_X_MAX 16
-#define BACKWARD_FREEDOM 1
-
-            printf("player pos (%.1f, %.1f)\n", t->position[0], t->position[1]);
+            /* printf("player pos (%.1f, %.1f)\n", t->position[0], t->position[1]); */
 
             // Constrain player on the Y axe
             if (t->position[1] > ROAD_Y_END)
@@ -127,6 +153,7 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
                 float previous_player_pos_y = t->position[1];
 
                 t->position[1] = ROAD_Y_BEGIN;
+                player->tped = true;
 
                 if (previous_player_pos_y != ROAD_Y_BEGIN)
                 {

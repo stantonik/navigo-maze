@@ -101,6 +101,7 @@ typedef struct
 {
     ecs_entity_t camera;
     float cam_lerp_speed;
+    bool tped;
 } player_t;
 
 #ifdef __cplusplus
