@@ -2,19 +2,19 @@
 
 out vec4 FragColor;
   
-in vec2 TexCoord;
+in vec2 texCoord;
+in vec4 color;
 
 uniform sampler2D font_bitmap;
-uniform vec3 textColor;
 
 void main()
 {
-    vec4 texColor = texture(font_bitmap, TexCoord);
+    vec4 texColor = texture(font_bitmap, texCoord);
 
     if (texColor.r < 0.1)
     {
         discard;
     }
 
-    FragColor = vec4(textColor, 1.0);;
+    FragColor = color;
 }

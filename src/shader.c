@@ -43,7 +43,7 @@ static inline char *read_file_to_string(const char *filename);
 inline void shader_init()
 {
     load("world_vertex.glsl", "world_fragment.glsl", SHADER_WORLD);
-    load("text_vertex.glsl", "text_fragment.glsl", SHADER_TEXT);
+    load("world_vertex.glsl", "text_fragment.glsl", SHADER_TEXT);
     /* load("ui_vertex.glsl", "ui_fragment.glsl", SHADER_UI); */
 }
 

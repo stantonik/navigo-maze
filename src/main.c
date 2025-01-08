@@ -119,7 +119,7 @@ inline void init_game()
 
     ecs_create_signature(&signature, audio_t);
     ecs_register_system(system_audio_init, signature, ECS_SYSTEM_ON_INIT);
-    ecs_register_system(system_audio_update, signature, ECS_SYSTEM_ON_UPDATE);
+    /* ecs_register_system(system_audio_update, signature, ECS_SYSTEM_ON_UPDATE); */
 
     ecs_create_signature(&signature, transform_t, sprite_t);
     ecs_register_system(system_mesh_init, signature, ECS_SYSTEM_ON_INIT);
@@ -157,17 +157,9 @@ inline void init_game()
     ecs_register_system(system_collider_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_collider_update, signature, ECS_SYSTEM_ON_UPDATE);
 
-
-    /* ecs_create_signature(&signature, transform_t, text_t); */
-    /* ecs_register_system(system_text_init, signature, ECS_SYSTEM_ON_INIT); */
-    /* ecs_register_system(system_text_update, signature, ECS_SYSTEM_ON_UPDATE); */
-
-    // Text
-    // Decrease FPS a lot
-    /* ecs_entity_t text; */
-    /* ecs_create_entity(&text); */
-    /* ecs_add_component(text, transform_t, &((transform_t){ .position={ 0, 0, -0.9 } })); */
-    /* ecs_add_component(text, text_t, &((text_t){ .text="Hello world!", .color={ 1, 1, 0 }, .size=0.05 })); */
+    ecs_create_signature(&signature, transform_t, text_t);
+    ecs_register_system(system_text_init, signature, ECS_SYSTEM_ON_INIT);
+    ecs_register_system(system_text_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     // Entities creation
     ecs_entity_t player;
@@ -194,6 +186,12 @@ inline void init_game()
 
         enemies[i] = enemy;
     }
+
+    // Text
+    ecs_entity_t text;
+    ecs_create_entity(&text);
+    ecs_add_component(text, transform_t, &((transform_t){ .position={ 0, 0, -0.9 } }));
+    ecs_add_component(text, text_t, &((text_t){ .text="Hello world!", .color={ 1, 0, 0, 1 }, .size=100 }));
 
     // Map generation
     map_t map = map_get(MAP_ZEBRACROSSING);

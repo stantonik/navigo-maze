@@ -16,6 +16,7 @@
 #include "components.h"
 #include "ecs/ecs_err.h"
 #include "gfx.h"
+#include "mesh.h"
 #include "shader.h"
 #include "systems.h"
 #include "textures.h"
@@ -25,53 +26,15 @@
 #include <string.h>
 
 //------------------------------------------------------------------------------
-// Macros
-//------------------------------------------------------------------------------
-#define ATTRIBUTE_POSITION 0
-#define ATTRIBUTE_MODEL_MAT_ROW0 1
-#define ATTRIBUTE_MODEL_MAT_ROW1 2
-#define ATTRIBUTE_MODEL_MAT_ROW2 3
-#define ATTRIBUTE_MODEL_MAT_ROW3 4
-#define ATTRIBUTE_COLOR 5
-#define ATTRIBUTE_UVOFFSET 6
-#define ATTRIBUTE_UVSCALE 7
-
-//------------------------------------------------------------------------------
-// Typedefs and Enums
-//------------------------------------------------------------------------------
-typedef struct
-{
-    mat4 model_mat;
-    vec4 color;
-    vec2 uvoffset;
-    vec2 uvscale;
-} instance_t;
-
-//------------------------------------------------------------------------------
-// Global Variables
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
 // Static Variables
 //------------------------------------------------------------------------------
 static GLuint VAO, VBO, IBO;
 
-static const vec3 quad_vertices[6] =
-{
-    { 1, 1, 0 }, // top-right
-    { 0, 1, 0 }, // top-left
-    { 1, 0, 0 }, // bottom-right
-    { 1, 0, 0 }, // bottom-right
-    { 0, 1, 0 }, // top-left
-    { 0, 0, 0 }  // bottom-left
-};
-
-vector_t instances;
+static vector_t instances;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
-static void create_model_matrix(transform_t *transform, mat4 model);
 
 //------------------------------------------------------------------------------
 // Function Implementations
@@ -83,12 +46,25 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args[])
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    vector_init(&instances, sizeof(instance_t), count);
+    for (int i = 0; i < count; ++i)
+    {
+        vector_push_back(&instances, &(instance_t){});
+    }
+
+    mesh_instance_init(&VAO, &VBO, &IBO, instances.capacity * sizeof(instance_t));
+
+    return ECS_OK;
+}
+
+void mesh_instance_init(GLuint *VAO, GLuint *VBO, GLuint *IBO, size_t IBO_size)
+{
+    glGenVertexArrays(1, VAO);
+    glBindVertexArray(*VAO);
 
     // Vertex buffer
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glGenBuffers(1, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
 
     // Position attribute
@@ -96,14 +72,9 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args[])
     glEnableVertexAttribArray(ATTRIBUTE_POSITION);
 
     // Instance buffer
-    vector_init(&instances, sizeof(instance_t), count);
-    for (int i = 0; i < count; ++i)
-    {
-        vector_push_back(&instances, &(instance_t){});
-    }
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ARRAY_BUFFER, instances.capacity * sizeof(instance_t), NULL, GL_DYNAMIC_DRAW);
+    glGenBuffers(1, IBO);
+    glBindBuffer(GL_ARRAY_BUFFER, *IBO);
+    glBufferData(GL_ARRAY_BUFFER, IBO_size, NULL, GL_DYNAMIC_DRAW);
 
     // Model matrix attributes (4 rows)
     for (int i = 0; i < 4; ++i) {
@@ -130,8 +101,6 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args[])
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
     glBindVertexArray(0);
-
-    return ECS_OK;
 }
 
 ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args[])
@@ -162,6 +131,10 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args[])
         instance_t *instance;
         vector_get(&instances, i, (void **)&instance);
 
+        transform_t tcenter = {  };
+        glm_vec3_sub((vec3){ transform->scale[0] / 2.0f, transform->scale[1] / 2.0f, transform->scale[2] / 2.0f }, transform->position, tcenter.position);
+        glm_vec3_copy(transform->rotation, tcenter.rotation);
+        glm_vec3_copy(transform->scale, tcenter.scale);
         create_model_matrix(transform, instance->model_mat);
         glm_vec4_copy(sprite->color, instance->color);
 
@@ -175,8 +148,9 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args[])
         for (int i = 0; i < count - instances.size; ++i)
         {
             vector_push_back(&instances, &(instance_t){  });
-            glBufferData(GL_ARRAY_BUFFER, instances.size * instances.element_size, NULL, GL_DYNAMIC_DRAW);
         }
+
+        glBufferData(GL_ARRAY_BUFFER, instances.size * instances.element_size, NULL, GL_DYNAMIC_DRAW);
     }
     glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size * instances.element_size, instances.data);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -184,32 +158,3 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args[])
     return ECS_OK;
 }
 
-inline void create_model_matrix(transform_t *transform, mat4 model)
-{
-    mat4 scale_matrix;
-    mat4 rotation_matrix;
-    mat4 translation_matrix;
-    mat4 centering_matrix;
-
-    // Initialize matrices
-    glm_mat4_identity(scale_matrix);
-    glm_mat4_identity(rotation_matrix);
-    glm_mat4_identity(translation_matrix);
-    glm_mat4_identity(centering_matrix);
-
-    vec2 scale;
-    glm_vec3_scale(transform->scale, 1.01f, scale); // avoid gap glitchs between tiles
-    glm_scale(scale_matrix, scale);
-
-    /* glm_rotate(rotation_matrix, glm_rad(transform->rotation[0]), (vec3){1.0f, 0.0f, 0.0f}); */
-    /* glm_rotate(rotation_matrix, glm_rad(transform->rotation[1]), (vec3){0.0f, 1.0f, 0.0f}); */
-    /* glm_rotate(rotation_matrix, glm_rad(transform->rotation[2]), (vec3){0.0f, 0.0f, 1.0f}); */
-    // Center the sprite (adjust for bottom-left reference point)
-    //
-    glm_translate(centering_matrix, (vec3){-scale[0] / 2.0f, -scale[1] / 2.0f, 0.0f});
-    glm_translate(translation_matrix, transform->position); 
-
-    glm_mat4_mul(centering_matrix, translation_matrix, model);
-    glm_mat4_mul(model, rotation_matrix, model);
-    glm_mat4_mul(model, scale_matrix, model);
-}

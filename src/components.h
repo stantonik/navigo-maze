@@ -7,6 +7,7 @@
 #ifndef COMPONENTS_H
 #define COMPONENTS_H
 
+#include "ecs/ecs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -59,8 +60,9 @@ typedef struct
 typedef struct
 {
     char text[256];
-    vec3 color;
+    vec4 color;
     float size;
+    ecs_entity_t camera;
 } text_t;
 
 typedef struct
@@ -91,6 +93,8 @@ typedef struct
     float zoom;
     float color_filter_strength;
     bool detach;
+    mat4 view;
+    mat4 projection;
 } camera_t;
 
 #ifdef __cplusplus

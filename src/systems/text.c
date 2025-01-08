@@ -7,7 +7,9 @@
 //------------------------------------------------------------------------------
 // Includes
 //------------------------------------------------------------------------------
+#include "camera.h"
 #include "cglm/affine.h"
+#include "cglm/io.h"
 #include "cglm/types.h"
 #include "cglm/mat4.h"
 #include "GL/glew.h"
@@ -16,6 +18,8 @@
 #include "components.h"
 #include "ecs/ecs.h"
 #include "ecs/ecs_err.h"
+#include "gfx.h"
+#include "mesh.h"
 #include "shader.h"
 #include "stb_image.h"
 #include "systems.h"
@@ -33,24 +37,7 @@
 #define BITMAP_HOR_COUNT 18
 #define BITMAP_ASCII_BEGIN 32
 #define BITMAP_ASCII_END 126
-
-#define ATTRIBUTE_POSITION 0
-#define ATTRIBUTE_MODEL_MAT_ROW0 1
-#define ATTRIBUTE_MODEL_MAT_ROW1 2
-#define ATTRIBUTE_MODEL_MAT_ROW2 3
-#define ATTRIBUTE_MODEL_MAT_ROW3 4
-#define ATTRIBUTE_UVOFFSET 6
-#define ATTRIBUTE_UVSCALE 7
-
-//------------------------------------------------------------------------------
-// Typedefs and Enums
-//------------------------------------------------------------------------------
-typedef struct
-{
-    mat4 model_mat;
-    vec2 uvoffset;
-    vec2 uvscale;
-} instance_t;
+#define CHAR_SPACING_COEF 0.11f
 
 //------------------------------------------------------------------------------
 // Static Variables
@@ -59,24 +46,13 @@ static GLuint bitmap_tex;
 
 static GLuint VAO, VBO, IBO;
 
-static const vec3 quad_vertices[6] =
-{
-    { 1, 1, 0 }, // top-right
-    { 0, 1, 0 }, // top-left
-    { 1, 0, 0 }, // bottom-right
-    { 1, 0, 0 }, // bottom-right
-    { 0, 1, 0 }, // top-left
-    { 0, 0, 0 }  // bottom-left
-};
-
-vector_t instances;
+static vector_t instances;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
-static void render_text(const char *text, transform_t *t, float scale, vec3 color);
+static void populate_text_instance(int ind, const char *text, transform_t *t, float scale, vec4 color);
 static void get_char_uv(char c, vec2 uvmin, vec2 uvmax);
-static void create_model_matrix(transform_t *transform, mat4 model);
 
 //------------------------------------------------------------------------------
 // Function Implementations
@@ -108,56 +84,37 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args[])
     }
     stbi_image_free(data);
 
-    glActiveTexture(GL_TEXTURE1);
     shader_use(SHADER_TEXT);
+    glActiveTexture(GL_TEXTURE1);
     glUniform1i(glGetUniformLocation(shader_get_program(SHADER_TEXT), "font_bitmap"), 1);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    // Vertex buffer
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
-
-    // Position attribute
-    glVertexAttribPointer(ATTRIBUTE_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(vec3), (void *)0);
-    glEnableVertexAttribArray(ATTRIBUTE_POSITION);
-
     // Instance buffer
-    vector_init(&instances, sizeof(instance_t), 1000);
+    int textlen = 0;
     for (int i = 0; i < count; ++i)
+    {
+        text_t *text;
+        ecs_get_component(it[i], text_t, &text);
+
+        textlen += strlen(text->text);    
+    }
+
+    vector_init(&instances, sizeof(instance_t), textlen);
+    for (int i = 0; i < textlen; ++i)
     {
         vector_push_back(&instances, &(instance_t){  });
     }
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ARRAY_BUFFER, instances.capacity * sizeof(instance_t), NULL, GL_DYNAMIC_DRAW);
 
-    // Model matrix attributes (4 rows)
-    for (int i = 0; i < 4; ++i) {
-        glVertexAttribPointer(ATTRIBUTE_MODEL_MAT_ROW0 + i, 4, GL_FLOAT, GL_FALSE, sizeof(instance_t), 
-                (void *)(offsetof(instance_t, model_mat) + i * sizeof(vec4)));
-        glEnableVertexAttribArray(ATTRIBUTE_MODEL_MAT_ROW0 + i);
-        glVertexAttribDivisor(ATTRIBUTE_MODEL_MAT_ROW0 + i, 1);
-    }
+    mesh_instance_init(&VAO, &VBO, &IBO, instances.capacity * sizeof(instance_t));
 
-    // UV offset attribute
-    glVertexAttribPointer(ATTRIBUTE_UVOFFSET, 2, GL_FLOAT, GL_FALSE, sizeof(instance_t), (void *)offsetof(instance_t, uvoffset));
-    glEnableVertexAttribArray(ATTRIBUTE_UVOFFSET);
-    glVertexAttribDivisor(ATTRIBUTE_UVOFFSET, 1);
-
-    // UV scale attribute
-    glVertexAttribPointer(ATTRIBUTE_UVSCALE, 2, GL_FLOAT, GL_FALSE, sizeof(instance_t), (void *)offsetof(instance_t, uvscale));
-    glEnableVertexAttribArray(ATTRIBUTE_UVSCALE);
-    glVertexAttribDivisor(ATTRIBUTE_UVSCALE, 1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-    glBindVertexArray(0);
+    mat4 projection;
+    create_projection_matrix(SCR_WIDTH, SCR_HEIGHT, projection);
+    shader_use(SHADER_TEXT);
+    GLuint projection_loc = glGetUniformLocation(shader_get_program(SHADER_TEXT), "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, (float *)projection);
 
     return ECS_OK;
 }
@@ -169,6 +126,8 @@ ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args[])
     glBindTexture(GL_TEXTURE_2D, bitmap_tex);
     glBindVertexArray(VAO);
 
+    int textlen = 0;
+
     for (int i = 0; i < count; ++i)
     {
         transform_t *transform;
@@ -176,28 +135,49 @@ ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args[])
         ecs_get_component(it[i], text_t, &text);
         ecs_get_component(it[i], transform_t, &transform);
 
-        render_text(text->text, transform, text->size, text->color);
+        mat4 view;
+        if (ecs_entity_has_component(text->camera, camera_t))
+        {
+            camera_t *cam;
+            ecs_get_component(text->camera, camera_t, &cam);
+            glm_mat4_dup(cam->view, view);
+        }
+        else
+        {
+            create_view_matrix(SCR_HEIGHT, &(transform_t){ .position={ SCR_WIDTH / 2.0f, SCR_HEIGHT / 2.0f, 0 } }, view);
+        }
+        GLuint view_loc = glGetUniformLocation(shader_get_program(SHADER_TEXT), "view");
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
+
+        populate_text_instance(textlen, text->text, transform, text->size, text->color);
+
+        textlen += strlen(text->text);    
     }
 
-    if (count > instances.size)
+    glBindBuffer(GL_ARRAY_BUFFER, IBO);
+
+    if (textlen > instances.size)
     {
-        for (int i = 0; i < count - instances.size; ++i)
+        for (int i = 0; i < textlen - instances.size; ++i)
         {
             vector_push_back(&instances, &(instance_t){  });
-            glBufferData(GL_ARRAY_BUFFER, instances.size * instances.element_size, NULL, GL_DYNAMIC_DRAW);
         }
+
+        glBufferData(GL_ARRAY_BUFFER, instances.size * instances.element_size, instances.data, GL_DYNAMIC_DRAW);
     }
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size * instances.element_size, instances.data);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    else
+    {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, textlen * instances.element_size, instances.data);
+    }
+
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, textlen);
     glBindVertexArray(0);
 
     return ECS_OK;
 }
 
-inline void render_text(const char *text, transform_t *t, float scale, vec3 color)
+inline void populate_text_instance(int ind, const char *text, transform_t *t, float scale, vec4 color)
 {
-    glUniform3fv(glGetUniformLocation(shader_get_program(SHADER_TEXT), "textColor"), 1, (float *)color);
-
     int i = 0;
     while (text[i] != '\0') 
     {
@@ -209,13 +189,14 @@ inline void render_text(const char *text, transform_t *t, float scale, vec3 colo
 
         // Update instance
         instance_t *instance;
-        vector_get(&instances, i, (void **)&instance);
+        vector_get(&instances, i + ind, (void **)&instance);
 
-        float xoffset = (BITMAP_TILE_WIDTH * i * 0.8f) * scale;
-        transform_t tcpy = *t;
+        float xoffset = (BITMAP_TILE_WIDTH * i * CHAR_SPACING_COEF) * scale;
+        transform_t tcpy = {  };
         tcpy.scale[0] = scale;
         tcpy.scale[1] = scale;
-        glm_vec3_add((vec3){ xoffset }, tcpy.position, tcpy.position);
+        tcpy.scale[2] = 1;
+        glm_vec3_add((vec3){ xoffset }, t->position, tcpy.position);
         create_model_matrix(&tcpy, instance->model_mat);
 
         // UV
@@ -223,14 +204,13 @@ inline void render_text(const char *text, transform_t *t, float scale, vec3 colo
         get_char_uv(c, uvmin, uvmax);
         glm_vec2_sub(uvmax, uvmin, instance->uvscale);
         glm_vec2_copy(uvmin, instance->uvoffset);
-
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instances.size);
+        glm_vec4_copy(color, instance->color);
 
         ++i;
     }
 }
 
-void get_char_uv(char c, vec2 uvmin, vec2 uvmax)
+inline void get_char_uv(char c, vec2 uvmin, vec2 uvmax)
 {
     int cind = c - BITMAP_ASCII_BEGIN;
     if (cind < 0) 
@@ -248,17 +228,4 @@ void get_char_uv(char c, vec2 uvmin, vec2 uvmax)
 
     glm_vec2_copy((vec2){ umin, vmin }, uvmin);
     glm_vec2_copy((vec2){ umax, vmax }, uvmax);
-}
-
-inline void create_model_matrix(transform_t *transform, mat4 model)
-{
-    mat4 scale_matrix;
-    mat4 translation_matrix;
-
-    glm_mat4_identity(scale_matrix);
-    glm_mat4_identity(translation_matrix);
-    glm_scale(scale_matrix, transform->scale);
-    glm_translate(translation_matrix, transform->position); 
-
-    glm_mat4_mul(translation_matrix, scale_matrix, model);
 }
