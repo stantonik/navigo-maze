@@ -62,6 +62,7 @@ typedef struct
     char text[256];
     vec4 color;
     float size;
+    int max_width;
     ecs_entity_t camera;
 } text_t;
 

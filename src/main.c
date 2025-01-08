@@ -190,8 +190,12 @@ inline void init_game()
     // Text
     ecs_entity_t text;
     ecs_create_entity(&text);
-    ecs_add_component(text, transform_t, &((transform_t){ .position={ 0, 0, -0.9 } }));
-    ecs_add_component(text, text_t, &((text_t){ .text="Hello world!", .color={ 1, 0, 0, 1 }, .size=100 }));
+    ecs_add_component(text, transform_t, &((transform_t){ .position={ -7, -6, -0.9 } }));
+    ecs_add_component(text, text_t, &((text_t){ 
+                .text="You woke up lost from a French soiree " \
+                "with the only memory of an important rendez-vous. "\
+                "You have to hurry up. But you lost your Navigo so you have to walk!",
+                .color={ 1, 1, 1, 0.8 }, .size=0.5f, .camera=player, .max_width=5}));
 
     // Map generation
     map_t map = map_get(MAP_ZEBRACROSSING);

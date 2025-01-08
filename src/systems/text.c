@@ -37,7 +37,9 @@
 #define BITMAP_HOR_COUNT 18
 #define BITMAP_ASCII_BEGIN 32
 #define BITMAP_ASCII_END 126
-#define CHAR_SPACING_COEF 0.11f
+
+#define CHAR_XSPACING_COEF 0.11f
+#define CHAR_YSPACING_COEF 0.10f
 
 //------------------------------------------------------------------------------
 // Static Variables
@@ -51,7 +53,7 @@ static vector_t instances;
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
-static void populate_text_instance(int ind, const char *text, transform_t *t, float scale, vec4 color);
+static void populate_text_instance(int ind, text_t *text, transform_t *t);
 static void get_char_uv(char c, vec2 uvmin, vec2 uvmax);
 
 //------------------------------------------------------------------------------
@@ -149,7 +151,7 @@ ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args[])
         GLuint view_loc = glGetUniformLocation(shader_get_program(SHADER_TEXT), "view");
         glUniformMatrix4fv(view_loc, 1, GL_FALSE, (float *)view);
 
-        populate_text_instance(textlen, text->text, transform, text->size, text->color);
+        populate_text_instance(textlen, text, transform);
 
         textlen += strlen(text->text);    
     }
@@ -176,27 +178,42 @@ ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args[])
     return ECS_OK;
 }
 
-inline void populate_text_instance(int ind, const char *text, transform_t *t, float scale, vec4 color)
+inline void populate_text_instance(int ind, text_t *text, transform_t *t)
 {
-    int i = 0;
-    while (text[i] != '\0') 
+    int line = 0;
+    int char_cnt = 0;
+    int word_cnt = 0;
+    for (int i = 0; text->text[i] != '\0'; ++i)
     {
-        char c = text[i];
+        char c = text->text[i];
         if (c < BITMAP_ASCII_BEGIN || c > BITMAP_ASCII_END)
         {
             c = '?';
+        }
+        if (c == ' ')
+        {
+            ++word_cnt;
         }
 
         // Update instance
         instance_t *instance;
         vector_get(&instances, i + ind, (void **)&instance);
 
-        float xoffset = (BITMAP_TILE_WIDTH * i * CHAR_SPACING_COEF) * scale;
+        float xoffset = (BITMAP_TILE_WIDTH * char_cnt * CHAR_XSPACING_COEF) * text->size;
+        float yoffset = (BITMAP_TILE_HEIGHT * line * CHAR_YSPACING_COEF) * text->size;
+        
+        ++char_cnt;
+        if (word_cnt / text->max_width > line)
+        {
+            ++line;
+            char_cnt = 0;
+        }
+
         transform_t tcpy = {  };
-        tcpy.scale[0] = scale;
-        tcpy.scale[1] = scale;
+        tcpy.scale[0] = text->size;
+        tcpy.scale[1] = text->size;
         tcpy.scale[2] = 1;
-        glm_vec3_add((vec3){ xoffset }, t->position, tcpy.position);
+        glm_vec3_add((vec3){ xoffset, -yoffset }, t->position, tcpy.position);
         create_model_matrix(&tcpy, instance->model_mat);
 
         // UV
@@ -204,9 +221,7 @@ inline void populate_text_instance(int ind, const char *text, transform_t *t, fl
         get_char_uv(c, uvmin, uvmax);
         glm_vec2_sub(uvmax, uvmin, instance->uvscale);
         glm_vec2_copy(uvmin, instance->uvoffset);
-        glm_vec4_copy(color, instance->color);
-
-        ++i;
+        glm_vec4_copy(text->color, instance->color);
     }
 }
 
