@@ -84,48 +84,111 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
         rigidbody_t *rb;
         rect_collider_t *col;
         camera_t *cam;
+        transform_t *cam_tranform;
+        player_t *player;
         ecs_get_component(it[i], transform_t, &t);
         ecs_get_component(it[i], rigidbody_t, &rb);
         ecs_get_component(it[i], rect_collider_t, &col);
-        ecs_get_component(it[i], camera_t, &cam);
+        ecs_get_component(it[i], player_t, &player);
+        ecs_get_component(player->camera, camera_t, &cam);
+        ecs_get_component(player->camera, transform_t, &cam_tranform);
 
         if (*gameover)
         {
-                audio_t *audio;
-                ecs_get_component(it[i], audio_t, &audio);
+            audio_t *audio;
+            ecs_get_component(it[i], audio_t, &audio);
 
-                cam->color_filter_strength += dt * 0.7f;
-                if (cam->color_filter_strength > 1) cam->color_filter_strength = 1;
-                cam->detach = true;
-                audio->volume -= dt * 0.2;
-                if (audio->volume < 0) 
-                {
-                    audio->volume = 0;
-                    audio->playing = false;
-                }
-        }
-
-        /* printf("player pos (%.1f, %.1f)\n", t->position[0], t->position[1]); */
-        /* printf("entity col count : %i\n", col->entities.size); */
-
-        if (t->position[1] > 10 && t->position[1] < 14)
-        {
-            cam->zoom = 1 / (t->position[1] - 10 + 1) * 20;
-        }
-        if (t->position[1] > 22)
-        {
-            t->position[1] = 14;
-        }
-
-        for (int j = 0; j < col->entities.size; ++j)
-        {
-            ecs_entity_t col_entity;
-            vector_get_copy(&col->entities, j, &col_entity);
-            if (ecs_entity_has_component(col_entity, enemy_t))
+            cam->color_filter_strength += dt * 0.7f;
+            if (cam->color_filter_strength > 1) cam->color_filter_strength = 1;
+            /* cam->detach = true; */
+            audio->volume -= dt * 0.2;
+            if (audio->volume < 0) 
             {
-                *gameover = true;
+                audio->volume = 0;
+                audio->playing = false;
             }
         }
+        else
+        {
+#define ROAD_CAM_ZOOM 5
+#define ROAD_Y_TRANS_BEGIN 10
+#define ROAD_Y_TRANS_END 12
+#define ROAD_Y_BEGIN 16
+#define ROAD_Y_END 22
+#define ROAD_X_MIN 12
+#define ROAD_X_MAX 16
+#define BACKWARD_FREEDOM 1
+            /* printf("player pos (%.1f, %.1f)\n", t->position[0], t->position[1]); */
+
+            vec3 cam_target_pos;
+            glm_vec3_copy(t->position, cam_target_pos);
+
+            // Smooth zoom entry
+            if (t->position[1] > ROAD_Y_TRANS_BEGIN && t->position[1] < ROAD_Y_TRANS_END)
+            {
+                float normalized_y = (t->position[1] - ROAD_Y_TRANS_BEGIN) / (ROAD_Y_TRANS_END - ROAD_Y_TRANS_BEGIN);
+                float eased_y = normalized_y * normalized_y * (3.0f - 2.0f * normalized_y);
+                float target_zoom = 20 + (ROAD_CAM_ZOOM - 20) * eased_y;
+                cam->zoom = glm_lerp(cam->zoom, target_zoom, 1.0f - expf(-5.0 * dt));
+            }
+
+            // Constrain player on the Y axe
+            if (t->position[1] > ROAD_Y_END)
+            {
+                t->position[1] = ROAD_Y_BEGIN;
+                cam_tranform->position[1] = ROAD_Y_BEGIN;
+            }
+
+            if (t->position[1] <= ROAD_Y_END && t->position[1] >= ROAD_Y_BEGIN)
+            {
+                // Forbid to go too backward
+                if (t->position[1] < cam_tranform->position[1] - BACKWARD_FREEDOM)
+                {
+                    if (rb->velocity[1] < 0)
+                    {
+                        rb->velocity[1] = 0;
+                    }
+                }
+
+                // Move camera on Y only if we go upward
+                if (cam_target_pos[1] < cam_tranform->position[1])
+                {
+                    cam_target_pos[1] = cam_tranform->position[1];
+                } 
+            }
+            if (t->position[1] <= ROAD_Y_END && t->position[1] >= ROAD_Y_TRANS_BEGIN)
+            {
+               // Constrain player on the road on the X axe
+                if (t->position[0] < ROAD_X_MIN)
+                {
+                    if (rb->velocity[0] < 0)
+                    {
+                        rb->velocity[0] = 0;
+                    }
+                }
+                else if (t->position[0] > ROAD_X_MAX - 1)
+                {
+                    if (rb->velocity[0] > 0)
+                    {
+                        rb->velocity[0] = 0;
+                    }
+                }
+            }
+
+            float factor = 1.0f - expf(-player->cam_lerp_speed * dt);
+            glm_vec3_lerp(cam_tranform->position, cam_target_pos, factor, cam_tranform->position);
+
+            // Check collision with bicycle and thus gameover
+            for (int j = 0; j < col->entities.size; ++j)
+            {
+                ecs_entity_t col_entity;
+                vector_get_copy(&col->entities, j, &col_entity);
+                if (ecs_entity_has_component(col_entity, enemy_t))
+                {
+                    *gameover = true;
+                }
+            }
+        }   
     }
 
     return ECS_OK;
@@ -145,21 +208,29 @@ ecs_err_t system_player_restart(ecs_entity_t *it, int count, void *args[])
     {
         transform_t *t;
         camera_t *cam;
+        transform_t *cam_t;
         audio_t *audio;
+        player_t *player;
         ecs_get_component(it[i], transform_t, &t);
-        ecs_get_component(it[i], camera_t, &cam);
         ecs_get_component(it[i], audio_t, &audio);
+        ecs_get_component(it[i], player_t, &player);
+        ecs_get_component(player->camera, camera_t, &cam);
+        ecs_get_component(player->camera, transform_t, &cam_t);
 
         glm_vec3_zero(t->position);
         cam->color_filter_strength = 0;
         cam->zoom = 20;
-        cam->detach = false;
+        player->cam_lerp_speed = 5;
         audio->volume = 0.5;
         audio->playing = true;
         audio->restart = true;
+        if (glm_vec3_distance(t->position, cam_t->position) < 1)
+        {
+            player->cam_lerp_speed = 10;
+            *restart = false;
+        }
     }
 
-    *restart = false;
     *gameover = false;
 
     return ECS_OK;

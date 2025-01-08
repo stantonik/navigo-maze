@@ -93,10 +93,15 @@ typedef struct
 {
     float zoom;
     float color_filter_strength;
-    bool detach;
     mat4 view;
     mat4 projection;
 } camera_t;
+
+typedef struct
+{
+    ecs_entity_t camera;
+    float cam_lerp_speed;
+} player_t;
 
 #ifdef __cplusplus
 }

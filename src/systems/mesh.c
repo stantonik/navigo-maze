@@ -132,10 +132,10 @@ ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args[])
         vector_get(&instances, i, (void **)&instance);
 
         transform_t tcenter = {  };
-        glm_vec3_sub((vec3){ transform->scale[0] / 2.0f, transform->scale[1] / 2.0f, transform->scale[2] / 2.0f }, transform->position, tcenter.position);
+        glm_vec3_sub(transform->position, (vec3){ transform->scale[0] / 2.0f, transform->scale[1] / 2.0f, transform->scale[2] / 2.0f }, tcenter.position);
         glm_vec3_copy(transform->rotation, tcenter.rotation);
         glm_vec3_copy(transform->scale, tcenter.scale);
-        create_model_matrix(transform, instance->model_mat);
+        create_model_matrix(&tcenter, instance->model_mat);
         glm_vec4_copy(sprite->color, instance->color);
 
         // UV

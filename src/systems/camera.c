@@ -49,8 +49,6 @@ ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args[])
     int grayscale_loc = glGetUniformLocation(shader_get_program(SHADER_WORLD), "u_GrayscaleAmount");
     glUniform1f(grayscale_loc, camera->color_filter_strength);
 
-    if (camera->detach) return ECS_OK;
-
     create_view_matrix(camera->zoom, transform, camera->view);
 
     GLint view_loc = glGetUniformLocation(shader_get_program(SHADER_WORLD), "view");

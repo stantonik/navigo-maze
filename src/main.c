@@ -110,6 +110,7 @@ inline void init_game()
     ecs_register_component(camera_t);
     ecs_register_component(text_t);
     ecs_register_component(enemy_t);
+    ecs_register_component(player_t);
     ecs_register_component(audio_t);
 
     // Systems registration
@@ -119,7 +120,7 @@ inline void init_game()
 
     ecs_create_signature(&signature, audio_t);
     ecs_register_system(system_audio_init, signature, ECS_SYSTEM_ON_INIT);
-    /* ecs_register_system(system_audio_update, signature, ECS_SYSTEM_ON_UPDATE); */
+    ecs_register_system(system_audio_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     ecs_create_signature(&signature, transform_t, sprite_t);
     ecs_register_system(system_mesh_init, signature, ECS_SYSTEM_ON_INIT);
@@ -135,7 +136,7 @@ inline void init_game()
     ecs_register_system(system_enemy_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_enemy_update, signature, ECS_SYSTEM_ON_UPDATE);
 
-    ecs_create_signature(&signature, transform_t, rigidbody_t, controller_t, rect_collider_t, camera_t);
+    ecs_create_signature(&signature, transform_t, rigidbody_t, controller_t, rect_collider_t, player_t);
     ecs_register_system(system_player_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_player_update, signature, ECS_SYSTEM_ON_UPDATE);
     ecs_set_system_parameters(system_player_update, 2, (void *[]){ &gameover, &dt });
@@ -162,6 +163,11 @@ inline void init_game()
     ecs_register_system(system_text_update, signature, ECS_SYSTEM_ON_UPDATE);
 
     // Entities creation
+    ecs_entity_t camera;
+    ecs_create_entity(&camera);
+    ecs_add_component(camera, transform_t, NULL);
+    ecs_add_component(camera, camera_t, &((camera_t){ .zoom=20 }));
+
     ecs_entity_t player;
     ecs_create_entity(&player);
     ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 } }));
@@ -169,8 +175,8 @@ inline void init_game()
     ecs_add_component(player, rect_collider_t, &((rect_collider_t){ .is_trigger=true, .size={ 0.6, 0.6 } }));
     ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=3 }));
     ecs_add_component(player, sprite_t, &((sprite_t){ .texture_name="player" }));
-    ecs_add_component(player, camera_t, &((camera_t){ .zoom=20 }));
     ecs_add_component(player, audio_t, &((audio_t){ .name="bg", .volume=0.5, .loop=true, .playing=true }));
+    ecs_add_component(player, player_t, &((player_t){ .camera=camera, .cam_lerp_speed=10 }));
 
     // Velo enemies
     ecs_entity_t enemies[10];
@@ -180,7 +186,7 @@ inline void init_game()
         ecs_create_entity(&enemy);
         ecs_add_component(enemy, transform_t, &((transform_t){ .position={ 12, 20 }, .scale={ 1.2, 1.2, 1 } }));
         ecs_add_component(enemy, rigidbody_t, &((rigidbody_t){ .mass=70 }));
-        ecs_add_component(enemy, rect_collider_t, NULL);
+        ecs_add_component(enemy, rect_collider_t, &((rect_collider_t){ .size={ 1, 1.2 } }));
         ecs_add_component(enemy, sprite_t, &((sprite_t){ .texture_name="enemy_velo" }));
         ecs_add_component(enemy, enemy_t, NULL);
 
@@ -195,7 +201,7 @@ inline void init_game()
                 .text="You woke up lost from a French soiree " \
                 "with the only memory of an important rendez-vous. "\
                 "You have to hurry up. But you lost your Navigo so you have to walk!",
-                .color={ 1, 1, 1, 0.8 }, .size=0.5f, .camera=player, .max_width=5}));
+                .color={ 1, 1, 1, 0.8 }, .size=0.5f, .camera=camera, .max_width=5}));
 
     // Map generation
     map_t map = map_get(MAP_ZEBRACROSSING);
