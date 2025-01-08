@@ -130,3 +130,37 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
 
     return ECS_OK;
 }
+
+ecs_err_t system_player_restart(ecs_entity_t *it, int count, void *args[])
+{
+    bool *gameover = (bool *)args[0];
+    bool *restart = (bool *)args[1];
+
+    if (!*restart) 
+    {
+        return ECS_OK;
+    }
+
+    for (int i = 0; i < count; ++i)
+    {
+        transform_t *t;
+        camera_t *cam;
+        audio_t *audio;
+        ecs_get_component(it[i], transform_t, &t);
+        ecs_get_component(it[i], camera_t, &cam);
+        ecs_get_component(it[i], audio_t, &audio);
+
+        glm_vec3_zero(t->position);
+        cam->color_filter_strength = 0;
+        cam->zoom = 20;
+        cam->detach = false;
+        audio->volume = 0.5;
+        audio->playing = true;
+        audio->restart = true;
+    }
+
+    *restart = false;
+    *gameover = false;
+
+    return ECS_OK;
+}

@@ -114,7 +114,7 @@ ecs_err_t system_controller_update(ecs_entity_t *it, int count, void *args[])
         } 
         else
         {
-            if (glfwGetKey(window, '\n'))
+            if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS)
             {
                 *restart = true;
             }

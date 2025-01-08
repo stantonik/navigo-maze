@@ -65,6 +65,7 @@ ecs_err_t system_audio_update(ecs_entity_t *it, int count, void *args[])
             if (!ma_sound_is_playing(&audio->sound))
             {
                 ma_sound_start(&audio->sound);
+                audio->restart = false;
             }
             else
             {
@@ -73,7 +74,18 @@ ecs_err_t system_audio_update(ecs_entity_t *it, int count, void *args[])
                     ma_sound_stop(&audio->sound);
                     audio->playing = false;
                 }
+                if (audio->restart)
+                {
+                    ma_sound_stop(&audio->sound);
+                    ma_sound_seek_to_pcm_frame(&audio->sound, 0);
+                    ma_sound_start(&audio->sound);
+                    audio->restart = false;
+                }
             }
+        }
+        else if (!audio->playing && audio->init)
+        {
+            ma_sound_stop(&audio->sound);
         }
     }
 

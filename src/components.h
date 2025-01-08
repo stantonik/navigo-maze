@@ -69,6 +69,7 @@ typedef struct
     float volume;
     bool loop;
     bool playing;
+    bool restart;
     ma_sound sound;
     bool init;
 } audio_t;

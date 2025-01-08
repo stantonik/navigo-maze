@@ -138,8 +138,9 @@ inline void init_game()
     ecs_create_signature(&signature, transform_t, rigidbody_t, controller_t, rect_collider_t, camera_t);
     ecs_register_system(system_player_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_player_update, signature, ECS_SYSTEM_ON_UPDATE);
-    // TODO: copy argument in ecslib
     ecs_set_system_parameters(system_player_update, 2, (void *[]){ &gameover, &dt });
+    ecs_register_system(system_player_restart, signature, ECS_SYSTEM_ON_UPDATE);
+    ecs_set_system_parameters(system_player_restart, 2, (void *[]){ &gameover, &restart });
 
     ecs_create_signature(&signature, transform_t);
     ecs_register_system(system_mouvement_init, signature, ECS_SYSTEM_ON_INIT);

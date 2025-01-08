@@ -46,6 +46,7 @@ extern ecs_err_t system_enemy_update(ecs_entity_t *it, int count, void *args[]);
 
 extern ecs_err_t system_player_init(ecs_entity_t *it, int count, void *args[]);
 extern ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[]);
+extern ecs_err_t system_player_restart(ecs_entity_t *it, int count, void *args[]);
 
 extern ecs_err_t system_audio_init(ecs_entity_t *it, int count, void *args[]);
 extern ecs_err_t system_audio_update(ecs_entity_t *it, int count, void *args[]);
