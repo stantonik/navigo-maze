@@ -29,7 +29,7 @@ static ma_engine engine;
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
-ecs_err_t system_audio_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_audio_init(ecs_entity_t *it, int count, void *args[])
 {
     ma_result result = ma_engine_init(NULL, &engine);
     if (result != MA_SUCCESS) 
@@ -40,7 +40,7 @@ ecs_err_t system_audio_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_audio_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_audio_update(ecs_entity_t *it, int count, void *args[])
 {
     for (int i = 0; i < count; ++i)
     {

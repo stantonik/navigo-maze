@@ -29,11 +29,13 @@
 //------------------------------------------------------------------------------
 static float dt = 0;
 static bool gameover = false;
+static bool restart = false;
 
 //------------------------------------------------------------------------------
 // Function Prototypes
 //------------------------------------------------------------------------------
 static double get_time();
+static void init_game();
 
 //------------------------------------------------------------------------------
 // Function Implementations
@@ -44,6 +46,56 @@ int main(void)
     shader_init();
     ecs_init();
 
+    init_game();
+
+    // Start displaying
+    GLFWwindow *window = gfx_get_window();
+
+    // Variables for FPS calculation
+    int frame_count = 0;
+    float fps_timer = 0.0f;
+    float fps;
+
+    ecs_listen_systems(ECS_SYSTEM_ON_INIT);
+
+    // Game loop
+    double previous_time = get_time();
+    while(!glfwWindowShouldClose(window))
+    {
+        double current_time = get_time();
+        dt = current_time - previous_time;
+        previous_time = current_time;
+
+        // FPS Calculation
+        frame_count++;
+        fps_timer += dt;
+
+        if (fps_timer >= 1.0)
+        {
+            fps = frame_count / fps_timer;
+            printf("\rFPS: %.0f", fps);
+            fflush(stdout);
+            frame_count = 0;
+            fps_timer = 0.0;
+        }
+
+        glClearColor(0.11f, 0.11f, 0.10f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        ecs_listen_systems(ECS_SYSTEM_ON_UPDATE);
+
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+    }
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    ecs_terminate();
+    return 0;
+}
+
+inline void init_game()
+{
     // Scene creation
     ecs_scene_t scene;
     ecs_create_scene(&scene);
@@ -86,18 +138,19 @@ int main(void)
     ecs_create_signature(&signature, transform_t, rigidbody_t, controller_t, rect_collider_t, camera_t);
     ecs_register_system(system_player_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_player_update, signature, ECS_SYSTEM_ON_UPDATE);
-    void *player_args[2] = { (void *)&gameover, (void *)&dt };
-    ecs_set_system_parameters(system_player_update, player_args);
+    // TODO: copy argument in ecslib
+    ecs_set_system_parameters(system_player_update, 2, (void *[]){ &gameover, &dt });
 
     ecs_create_signature(&signature, transform_t);
     ecs_register_system(system_mouvement_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_create_signature(&signature, transform_t, rigidbody_t);
     ecs_register_system(system_mouvement_update, signature, ECS_SYSTEM_ON_UPDATE);
-    ecs_set_system_parameters(system_mouvement_update, &dt);
+    ecs_set_system_parameters(system_mouvement_update, 1, (void *[]){ &dt });
 
     ecs_create_signature(&signature, controller_t);
     ecs_register_system(system_controller_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_controller_update, signature, ECS_SYSTEM_ON_UPDATE);
+    ecs_set_system_parameters(system_controller_update, 2, (void *[]){ &gameover, &restart });
 
     ecs_create_signature(&signature, transform_t, rigidbody_t, rect_collider_t);
     ecs_register_system(system_collider_init, signature, ECS_SYSTEM_ON_INIT);
@@ -173,50 +226,6 @@ int main(void)
         }
     }
     map_free(map);
-
-    // Start displaying
-    GLFWwindow *window = gfx_get_window();
-
-    // Variables for FPS calculation
-    int frame_count = 0;
-    float fps_timer = 0.0f;
-    float fps;
-
-    ecs_listen_systems(ECS_SYSTEM_ON_INIT);
-    // Game loop
-    double previous_time = get_time();
-    while(!glfwWindowShouldClose(window))
-    {
-        double current_time = get_time();
-        dt = current_time - previous_time;
-        previous_time = current_time;
-
-        // FPS Calculation
-        frame_count++;
-        fps_timer += dt;
-
-        if (fps_timer >= 1.0)
-        {
-            fps = frame_count / fps_timer;
-            printf("\rFPS: %.0f", fps);
-            fflush(stdout);
-            frame_count = 0;
-            fps_timer = 0.0;
-        }
-
-        glClearColor(0.11f, 0.11f, 0.10f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        ecs_listen_systems(ECS_SYSTEM_ON_UPDATE);
-
-        glfwPollEvents();
-        glfwSwapBuffers(window);
-    }
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
-    ecs_terminate();
-    return 0;
 }
 
 inline double get_time() 

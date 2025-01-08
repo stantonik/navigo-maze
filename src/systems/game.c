@@ -21,7 +21,7 @@
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
-ecs_err_t system_enemy_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_enemy_init(ecs_entity_t *it, int count, void *args[])
 {
     srand(time(NULL));
 
@@ -42,7 +42,7 @@ ecs_err_t system_enemy_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_enemy_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_enemy_update(ecs_entity_t *it, int count, void *args[])
 {
     for (int i = 0; i < count; ++i)
     {
@@ -60,7 +60,7 @@ ecs_err_t system_enemy_update(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_player_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_player_init(ecs_entity_t *it, int count, void *args[])
 {
     for (int i = 0; i < count; ++i)
     {
@@ -73,12 +73,10 @@ ecs_err_t system_player_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
 {
-    void **player_args = (void **)args;
-
-    bool *gameover = (bool *)player_args[0];
-    float dt = *((float *)player_args[1]);
+    bool *gameover = (bool *)args[0];
+    float dt = *(float *)args[1];
 
     for (int i = 0; i < count; ++i)
     {
@@ -93,13 +91,9 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args)
 
         if (*gameover)
         {
-                controller_t *ctrl;
                 audio_t *audio;
-                ecs_get_component(it[i], controller_t, &ctrl);
                 ecs_get_component(it[i], audio_t, &audio);
 
-                ctrl->run_speed = 0;
-                ctrl->walk_speed = 0;
                 cam->color_filter_strength += dt * 0.7f;
                 if (cam->color_filter_strength > 1) cam->color_filter_strength = 1;
                 cam->detach = true;

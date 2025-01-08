@@ -40,7 +40,7 @@ static bool check_all_collision_2d(transform_t *t1, rect_collider_t *c1, int ind
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
-ecs_err_t system_mouvement_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_mouvement_init(ecs_entity_t *it, int count, void *args[])
 {
     for (int i = 0; i < count; ++i)
     {
@@ -56,9 +56,9 @@ ecs_err_t system_mouvement_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args[])
 {
-    float dt = ((float *)args)[0];
+    float dt = *(float *)args[0];
 
     for (int i = 0; i < count; ++i)
     {
@@ -129,7 +129,7 @@ ecs_err_t system_mouvement_update(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_collider_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_collider_init(ecs_entity_t *it, int count, void *args[])
 {
     for (int i = 0; i < count; ++i)
     {
@@ -149,7 +149,7 @@ ecs_err_t system_collider_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;       
 }
 
-ecs_err_t system_collider_end(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_collider_end(ecs_entity_t *it, int count, void *args[])
 {
     for (int i = 0; i < count; ++i)
     {
@@ -234,7 +234,7 @@ inline bool check_all_collision_2d(transform_t *t, rect_collider_t *c, int ind, 
     return col;
 }
 
-ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_collider_update(ecs_entity_t *it, int count, void *args[])
 {
     for (int i = 0; i < count; ++i)
     {

@@ -58,7 +58,7 @@ static void set_uv_coordinates(int atlas_width, int atlas_height);
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
-ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_texture_init(ecs_entity_t *it, int count, void *args[])
 {
     stoi_map_init(&name_to_texture_map);
     vector_init(&textures, sizeof(texture_info_t), 1);

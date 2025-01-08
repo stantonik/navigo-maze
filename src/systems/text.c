@@ -81,7 +81,7 @@ static void create_model_matrix(transform_t *transform, mat4 model);
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
-ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args[])
 {
     if (glewInit() != GLEW_OK)
     {
@@ -162,7 +162,7 @@ ecs_err_t system_text_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_text_update(ecs_entity_t *it, int count, void *args[])
 {
     shader_use(SHADER_TEXT);
     glActiveTexture(GL_TEXTURE1);

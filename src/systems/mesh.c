@@ -76,7 +76,7 @@ static void create_model_matrix(transform_t *transform, mat4 model);
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
-ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args[])
 {
     shader_use(SHADER_WORLD);
     glEnable(GL_DEPTH_TEST);
@@ -134,7 +134,7 @@ ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args[])
 {
     shader_use(SHADER_WORLD);
     glActiveTexture(GL_TEXTURE0);
@@ -146,7 +146,7 @@ ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_mesh_update(ecs_entity_t *it, int count, void *args[])
 {
     shader_use(SHADER_WORLD);
     glBindBuffer(GL_ARRAY_BUFFER, IBO);

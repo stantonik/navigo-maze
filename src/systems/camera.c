@@ -26,7 +26,7 @@ static void create_view_matrix(float height, transform_t *transform, mat4 view_m
 //------------------------------------------------------------------------------
 // Function Implementations
 //------------------------------------------------------------------------------
-ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args[])
 {
     camera_t *camera;
     ecs_get_component(it[count - 1], camera_t, &camera);
@@ -48,7 +48,7 @@ ecs_err_t system_camera_init(ecs_entity_t *it, int count, void *args)
     return ECS_OK;
 }
 
-ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args)
+ecs_err_t system_camera_update(ecs_entity_t *it, int count, void *args[])
 {
     camera_t *camera;
     transform_t *transform;
