@@ -144,6 +144,7 @@ inline void init_game()
     ecs_create_signature(&signature, transform_t, rigidbody_t, enemy_t);
     ecs_register_system(system_enemy_init, signature, ECS_SYSTEM_ON_INIT);
     ecs_register_system(system_enemy_update, signature, ECS_SYSTEM_ON_UPDATE);
+    ecs_set_system_parameters(system_enemy_update, 1, (void *[]){ &player });
 
     ecs_create_signature(&signature, transform_t);
     ecs_register_system(system_mouvement_init, signature, ECS_SYSTEM_ON_INIT);
@@ -170,6 +171,22 @@ inline void init_game()
     ecs_add_component(camera, transform_t, NULL);
     ecs_add_component(camera, camera_t, &((camera_t){ .zoom=20 }));
 
+    // Texts
+    ecs_entity_t text;
+    ecs_create_entity(&text);
+    ecs_add_component(text, transform_t, &((transform_t){ .position={ -7, -6, -0.9 } }));
+    ecs_add_component(text, text_t, &((text_t){ 
+                .text="You woke up lost from a French soiree " \
+                "with the only memory of an important rendez-vous. "\
+                "You have to hurry up but you have lost your Navigo "\
+                "so take a walk and enjoy the views!",
+                .color={ 1, 1, 1, 0.8 }, .size=0.5f, .camera=camera, .max_width=5}));
+
+    ecs_entity_t score;
+    ecs_create_entity(&score);
+    ecs_add_component(score, transform_t, NULL);
+    ecs_add_component(score, text_t, &((text_t){ .color={ 0.1, 0.1, 0.2, 0.0 }, .text="0.0", .size=0.3f, .camera=camera, .max_width=1 }));
+
     ecs_create_entity(&player);
     ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 } }));
     ecs_add_component(player, rigidbody_t, &((rigidbody_t){ .mass=70, .friction=0.001f }));
@@ -177,8 +194,7 @@ inline void init_game()
     ecs_add_component(player, controller_t, &((controller_t){ .walk_speed=3 }));
     ecs_add_component(player, sprite_t, &((sprite_t){ .texture_name="player" }));
     ecs_add_component(player, audio_t, &((audio_t){ .name="bg", .volume=0.5, .loop=true, .playing=true }));
-    ecs_add_component(player, player_t, &((player_t){ .camera=camera, .cam_lerp_speed=10 }));
-    ecs_set_system_parameters(system_enemy_update, 1, (void *[]){ &player });
+    ecs_add_component(player, player_t, &((player_t){ .ecamera=camera, .escore=score, .cam_lerp_speed=5 }));
 
     // Velo enemies
     ecs_entity_t enemies[10];
@@ -194,17 +210,6 @@ inline void init_game()
 
         enemies[i] = enemy;
     }
-
-    // Text
-    ecs_entity_t text;
-    ecs_create_entity(&text);
-    ecs_add_component(text, transform_t, &((transform_t){ .position={ -7, -6, -0.9 } }));
-    ecs_add_component(text, text_t, &((text_t){ 
-                .text="You woke up lost from a French soiree " \
-                "with the only memory of an important rendez-vous. "\
-                "You have to hurry up but you have lost your Navigo "\
-                "so take a walk and enjoy the views!",
-                .color={ 1, 1, 1, 0.8 }, .size=0.5f, .camera=camera, .max_width=5}));
 
     // Map generation
     map_t map = map_get(MAP_ZEBRACROSSING);

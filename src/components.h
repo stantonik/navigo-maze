@@ -99,7 +99,10 @@ typedef struct
 
 typedef struct
 {
-    ecs_entity_t camera;
+    ecs_entity_t ecamera;
+    ecs_entity_t escore;
+    float score;
+    float best_score;
     float cam_lerp_speed;
     bool tped;
 } player_t;
