@@ -293,17 +293,17 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
                     if (isbest)
                     {
                         printf("Writing to the log file...\n");
-                        FILE *file = fopen(LOG_PATH, "w");
-                        if (file == NULL)
-                        {
-                            printf("Error saving score\n");
-                        }
-                        else
-                        {
-                            printf("New bestscore saved (%.1f)\n", player->best_score);
-                            fprintf(file, "%.1f\n", player->best_score);
-                            fclose(file);
-                        }
+                        /* FILE *file = fopen(LOG_PATH, "w"); */
+                        /* if (file == NULL) */
+                        /* { */
+                        /*     printf("Error saving score\n"); */
+                        /* } */
+                        /* else */
+                        /* { */
+                        /*     printf("New bestscore saved (%.1f)\n", player->best_score); */
+                        /*     fprintf(file, "%.1f\n", player->best_score); */
+                        /*     fclose(file); */
+                        /* } */
                     }
 
                     player->score = 0;

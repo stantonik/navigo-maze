@@ -39,11 +39,11 @@ INCLUDES = $(addprefix -I,$(SRC_DIR) $(INCLUDE_DIR))
 CPPFLAGS = $(INCLUDES) -MMD -MP
 
 # C compiler settings
-CC = gcc
-CFLAGS = -g -Wall -std=gnu99
+CC = clang
+CFLAGS = -g -Wall -std=gnu99 -arch x86_64 -arch arm64
 
 # Linker flags
-LDFLAGS =
+LDFLAGS = -arch x86_64 -arch arm64
 LDLIBS =
 
 # Target OS detection
@@ -74,7 +74,7 @@ else ifeq ($(OS),macos)
 	INCLUDES +=
 	LDFLAGS +=
 	LDLIBS += -framework OpenGL -framework Cocoa -framework IOKit \
-			  $(LIBS_DIR)/glew/lib/libGLEW.a \
+			  $(LIBS_DIR)/glew/lib_universal/libGLEW.a \
 			  $(LIBS_DIR)/glfw/lib-universal/libglfw3.a \
 			  $(LIBS_DIR)/csimple-ecs/lib/csimple_ecs.a
 else ifeq ($(OS),linux)
@@ -137,7 +137,6 @@ $(OBJS): $(OBJ_DIR)/%.o: %.c
 
 .PHONY: run
 run: $(BIN_DIR)/$(EXEC)
-	# @cd $(BIN_DIR) && ./$(EXEC)
 	$(BIN_DIR)/$(EXEC)
 
 # Copy assets to bin directory
