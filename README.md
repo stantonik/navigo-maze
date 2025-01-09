@@ -1,5 +1,5 @@
 # Navigo-Maze
-> Navigo-Maze is a puzzle adventure game set in Paris, where you must navigate the city's maze-like streets and Métro system without a Navigo pass.
+> Navigo-Maze is a obstacle-adventure game set in Paris, where you must navigate the city's streets while avoiding the cyclists.
 
 ## Table of Contents
 - [Synopsis](#synopsis)
@@ -10,26 +10,17 @@
 - [License](#license)
 
 ## Synopsis
-After a wild Parisian soirée, you find yourself in the heart of the City of Light, disoriented and with no Navigo pass. The city's maze-like streets and Métro lines stretch before you like an impenetrable labyrinth. You must gather clues scattered across iconic Parisian neighborhoods, solve puzzles, and outwit the Métro controllers who patrol the city.
+After waking up lost from a French soirée, you’re in a rush to make it to an important rendezvous. With no Navigo card in hand, your only option is to walk your way there. But it won’t be easy, cyclists are **everywhere**, and you’ll need quick reflexes to avoid them!
 
-You must piece together cryptic messages, forgotten notes, and whispers from locals to get to your rendezvous on time. Be careful: one wrong turn could send you deeper into the labyrinth, and the clock is ticking!
+Navigate the bustling streets, stay on your toes, and enjoy the journey. Can you make it to your meeting in one piece, or will the cyclists get the better of you?
 
-<!-- **DEMO** -->
-<!-- ![demo](./assets/demo.gif) -->
+![demo](./assets/demo.gif)
 
 ## Features
 - **Iconic Parisian neighborhoods:** Explore famous locations such as Montmartre, Châtelet, and more!
-- **Challenging puzzles:** Solve intricate puzzles that require logic and exploration to advance.
-- **Time pressure:** The clock is ticking, and you need to make it to your meeting on time.
-- **Stealth elements:** Avoid Métro controllers who patrol the city looking for fare evaders.
-- **Mystery and exploration:** Discover hidden messages and cryptic notes to guide you on your journey.
 
 ## How to Play
-- Use the arrow keys or WASD to move around the Parisian streets.
-- Interact with NPCs and objects to gather clues and information.
-- Solve puzzles by following the clues found in your surroundings.
-- Watch out for the Métro controllers—they will catch you if you're without a valid pass!
-- Keep an eye on the timer as it counts down toward your rendezvous.
+Use the arrow keys or WASD to move around the Parisian streets.
 
 ## Installation
 > You can download the precompiled binaries for Windows and MacOS in the release section. However, if your platform is not listed, you can choose to build the project.
@@ -55,7 +46,9 @@ The game relies on the following third-party libraries:
 - **GLFW:** Window and input management library.
 - **cglm:** Lightweight math library for 3D applications.
 - **jsmn:** A lightweight JSON parser.
-- **stb:** A collection of single-file libraries for various purposes (e.g., image loading).
+- **uthash:** Hash tables.
+- **stb:** Loading PNG images and texture atlases.
+- **miniaudio:** Sound engine.
 
 ## License
 This project is licensed under the Apache-2.0 License - see the [LICENSE](./LICENSE) file for details.
