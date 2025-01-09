@@ -222,10 +222,8 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
 
             if (t->position[1] <= ROAD_Y_END && t->position[1] >= ROAD_Y_TRANS_END)
             {
-                // Increment score
-                player->score += dt * 2;
                 score_txt->text[0] = '\0';
-                sprintf(score_txt->text, "%.1f", player->score);
+                snprintf(score_txt->text, 50, "%.1f", player->score);
 
                 // Forbid to go too backward
                 if (t->position[1] < cam_tranform->position[1] - BACKWARD_FREEDOM)
@@ -241,6 +239,11 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
                 {
                     cam_target_pos[1] = cam_tranform->position[1];
                 } 
+                else
+                {
+                    // Increment score by the distance traveled
+                    player->score += rb->velocity[1] * dt;
+                }
             }
             if (t->position[1] <= ROAD_Y_END && t->position[1] >= ROAD_Y_TRANS_BEGIN)
             {
