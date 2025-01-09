@@ -76,7 +76,7 @@ int main(void)
         if (fps_timer >= 1.0)
         {
             fps = frame_count / fps_timer;
-            printf("\rFPS: %.0f", fps);
+            printf("FPS: %.0f\n", fps);
             fflush(stdout);
             frame_count = 0;
             fps_timer = 0.0;

@@ -3,3 +3,4 @@ build
 libs/glew
 libs/glfw
 .cache
+score.txt

@@ -290,20 +290,21 @@ ecs_err_t system_player_update(ecs_entity_t *it, int count, void *args[])
                     snprintf(score_txt->text, 100, "score:%.1f best:%.1f", player->score, player->best_score);
 
                     // Save the bestscore
-                    /* if (isbest) */
-                    /* { */
-                    /*     FILE *file = fopen(LOG_PATH, "w"); */
-                    /*     if (file == NULL) */
-                    /*     { */
-                    /*         printf("Error saving score\n"); */
-                    /*     } */
-                    /*     else */
-                    /*     { */
-                    /*         printf("New bestscore saved (%.1f)\n", player->best_score); */
-                    /*         fprintf(file, "%.1f\n", player->score); */
-                    /*         fclose(file); */
-                    /*     } */
-                    /* } */
+                    if (isbest)
+                    {
+                        printf("Writing to the log file...\n");
+                        FILE *file = fopen(LOG_PATH, "w");
+                        if (file == NULL)
+                        {
+                            printf("Error saving score\n");
+                        }
+                        else
+                        {
+                            printf("New bestscore saved (%.1f)\n", player->best_score);
+                            fprintf(file, "%.1f\n", player->best_score);
+                            fclose(file);
+                        }
+                    }
 
                     player->score = 0;
                     *gameover = true;
@@ -346,10 +347,10 @@ ecs_err_t system_player_restart(ecs_entity_t *it, int count, void *args[])
         ecs_get_component(player->escore, text_t, &score_txt);
         ecs_get_component(player->escore, transform_t, &score_t);
 
-        glm_vec3_zero(t->position);
+        glm_vec3_copy((vec3){ ROAD_X_MIN + 1, ROAD_Y_TRANS_BEGIN - 2 }, t->position);
         cam->color_filter_strength = 0;
         cam->zoom = 20;
-        player->cam_lerp_speed = 5;
+        player->cam_lerp_speed = 4;
         audio->volume = 0.5;
         audio->playing = true;
         audio->restart = true;
