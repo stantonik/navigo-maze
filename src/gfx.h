@@ -22,7 +22,7 @@ extern "C" {
 //------------------------------------------------------------------------------
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
-#define SRC_TITLE "NavigoMaze"
+#define SCR_TITLE "NavigoMaze"
 
 //------------------------------------------------------------------------------
 // Function Prototypes

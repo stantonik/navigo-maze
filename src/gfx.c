@@ -52,7 +52,7 @@ inline void gfx_init_opengl()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, SRC_TITLE, NULL, NULL);
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, SCR_TITLE, NULL, NULL);
     if (window == NULL)
     {
         fprintf(stderr, "Failed to create windows");

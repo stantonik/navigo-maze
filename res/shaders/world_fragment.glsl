@@ -19,6 +19,6 @@ void main()
 
     float gray = dot(mixedColor.rgb, vec3(0.299, 0.587, 0.114));
     vec3 grayscaleColor = vec3(gray);
-    vec3 blendedColor = mix(texColor.rgb, grayscaleColor, u_GrayscaleAmount);
+    vec3 blendedColor = mix(mixedColor.rgb, grayscaleColor, u_GrayscaleAmount);
     FragColor = vec4(blendedColor, texColor.a);
 }

@@ -10,6 +10,7 @@
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -81,9 +82,6 @@ int main(void)
             fps_timer = 0.0;
         }
 
-        glClearColor(0.11f, 0.11f, 0.10f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         ecs_listen_systems(ECS_SYSTEM_ON_UPDATE);
 
         glfwPollEvents();
@@ -94,6 +92,59 @@ int main(void)
     glfwTerminate();
     ecs_terminate();
     return 0;
+}
+
+void title_animation(ecs_entity_t entity, float dt)
+{
+    text_t *txt;
+    ecs_get_component(entity, text_t, &txt);
+
+    transform_t *transform;
+    ecs_get_component(entity, transform_t, &transform);
+
+    // Animation parameters
+    static float time = 0.0f;
+    const float min_size = 1.8f;
+    const float max_size = 2.0f;
+    const float speed = 4.0f;
+
+    time += dt * speed;
+
+    float new_size = min_size + (max_size - min_size) * (0.5f + 0.5f * sinf(time));
+
+    // Calculate the offset to keep the text centered
+    float size_diff = new_size - txt->size;
+    float offset_x = size_diff * 4.f;
+    float offset_y = size_diff * 1.f;
+
+    txt->size = new_size;
+
+    // Adjust the transform position to keep the text centered
+    transform->position[0] -= offset_x;
+    transform->position[1] -= offset_y;
+
+    transform_t *pt;
+    ecs_get_component(player, transform_t, &pt);
+    // Check if the player is moving
+    if (fabsf(pt->position[0]) > 0.1f || fabsf(pt->position[1]) > 0.1f)
+    {
+        const float fade_speed = 1.5f;
+        txt->color[3] -= fade_speed * dt;
+
+        if (txt->color[3] < 0.0f)
+            txt->color[3] = 0.0f;
+    }
+    else
+    {
+        // Reset opacity if the player stops moving
+        const float restore_speed = 1.5f;
+        txt->color[3] += restore_speed * dt;
+
+        if (txt->color[3] > 1.0f)
+        {
+            txt->color[3] = 1.0f;
+        }
+    }
 }
 
 inline void init_game()
@@ -114,6 +165,7 @@ inline void init_game()
     ecs_register_component(enemy_t);
     ecs_register_component(player_t);
     ecs_register_component(audio_t);
+    ecs_register_component(animation_t);
 
     // Systems registration
     ecs_signature_t signature;
@@ -129,6 +181,10 @@ inline void init_game()
     ecs_register_system(system_mesh_update, signature, ECS_SYSTEM_ON_UPDATE);
     ecs_create_signature(&signature, sprite_t);
     ecs_register_system(system_mesh_draw, signature, ECS_SYSTEM_ON_UPDATE);
+
+    ecs_create_signature(&signature, animation_t);
+    ecs_register_system(system_animation_update, signature, ECS_SYSTEM_ON_UPDATE);
+    ecs_set_system_parameters(system_animation_update, 1, (void *[]){ &dt });
 
     ecs_create_signature(&signature, transform_t, camera_t);
     ecs_register_system(system_camera_init, signature, ECS_SYSTEM_ON_INIT);
@@ -174,7 +230,7 @@ inline void init_game()
     // Texts
     ecs_entity_t text;
     ecs_create_entity(&text);
-    ecs_add_component(text, transform_t, &((transform_t){ .position={ -7, -6, -0.9 } }));
+    ecs_add_component(text, transform_t, &((transform_t){ .position={ -7, -6, -0.2 } }));
     ecs_add_component(text, text_t, &((text_t){ 
                 .text="You woke up lost from a French soiree " \
                 "with the only memory of an important rendez-vous. "\
@@ -186,6 +242,17 @@ inline void init_game()
     ecs_create_entity(&score);
     ecs_add_component(score, transform_t, NULL);
     ecs_add_component(score, text_t, &((text_t){ .color={ 0.1, 0.1, 0.2, 0.0 }, .text="0.0", .size=0.3f, .camera=camera, .max_width=1 }));
+
+    ecs_entity_t title;
+    ecs_create_entity(&title);
+    ecs_add_component(title, transform_t, &((transform_t){ .position={ -8, 6, 0 } }));
+    ecs_add_component(title, text_t, &((text_t){ .color={ 1, 1, 1, 0 }, .text=SCR_TITLE, .size=2, .camera=camera }));
+    ecs_add_component(title, animation_t, &((animation_t){ .callback=title_animation }));
+
+    /* ecs_entity_t ease_in_overlay; */
+    /* ecs_create_entity(&ease_in_overlay); */
+    /* ecs_add_component(ease_in_overlay, transform_t, &((transform_t){ .position={ 0, 0, -0.3 }, .scale={ 50, 50, 1 } })); */
+    /* ecs_add_component(ease_in_overlay, sprite_t, &((sprite_t){ .texture_name="city/tile_0000", .color={ 1, 1, 1, 0 } })); */
 
     ecs_create_entity(&player);
     ecs_add_component(player, transform_t, &((transform_t){ .scale={ 0.8, 0.8, 1 } }));

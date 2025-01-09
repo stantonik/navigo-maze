@@ -41,10 +41,11 @@ static vector_t instances;
 //------------------------------------------------------------------------------
 ecs_err_t system_mesh_init(ecs_entity_t *it, int count, void *args[])
 {
-    shader_use(SHADER_WORLD);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    shader_use(SHADER_WORLD);
 
     vector_init(&instances, sizeof(instance_t), count);
     for (int i = 0; i < count; ++i)
@@ -108,6 +109,9 @@ ecs_err_t system_mesh_draw(ecs_entity_t *it, int count, void *args[])
     shader_use(SHADER_WORLD);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_get_id());
+
+    glClearColor(0.11f, 0.11f, 0.10f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindVertexArray(VAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, instances.size);

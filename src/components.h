@@ -97,6 +97,14 @@ typedef struct
     mat4 projection;
 } camera_t;
 
+typedef void (*animation_callback_t)(ecs_entity_t entity, float dt);
+
+typedef struct
+{
+    animation_callback_t callback;
+
+} animation_t;
+
 typedef struct
 {
     ecs_entity_t ecamera;
